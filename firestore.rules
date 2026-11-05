@@ -27,12 +27,12 @@ service cloud.firestore {
         && incoming().keys().hasAll(['id', 'question', 'imageUrl', 'answer', 'category', 'subcategory'])
         && incoming().question is string && incoming().question.size() <= 2000
         && incoming().answer is string && incoming().answer.size() <= 1000
-        && incoming().imageUrl is string && incoming().imageUrl.size() <= 2000
+        && incoming().imageUrl is string && incoming().imageUrl.size() <= 600000
         && incoming().category is string && incoming().category.size() <= 100
         && incoming().subcategory is string && incoming().subcategory.size() <= 100;
 
       allow update: if isValidId(puzzleId)
-        && incoming().diff(resource.data).affectedKeys().hasOnly(['question', 'imageUrl', 'answer', 'hint', 'category', 'subcategory', 'difficulty', 'updatedAt']);
+        && incoming().diff(resource.data).affectedKeys().hasOnly(['question', 'imageUrl', 'answer', 'hint', 'category', 'subcategory', 'difficulty', 'updatedAt', 'publishedAt', 'id']);
 
       allow delete: if isValidId(puzzleId);
     }
@@ -46,7 +46,7 @@ service cloud.firestore {
       allow create, update: if isValidId(categoryId)
         && incoming().keys().hasAll(['id', 'name', 'subcategories'])
         && incoming().name is string && incoming().name.size() <= 100
-        && incoming().subcategories is list && incoming().subcategories.size() <= 50;
+        && incoming().subcategories is list && incoming().subcategories.size() <= 100;
 
       allow delete: if isValidId(categoryId);
     }

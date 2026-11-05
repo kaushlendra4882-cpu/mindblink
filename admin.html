@@ -188,13 +188,33 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Puzzle Visual / Image URL *</label>
-              <div class="flex gap-2">
-                <input id="input-image-url" type="url" required placeholder="https://... or choose a preset"
-                  class="flex-1 bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
-                <button type="button" onclick="togglePresetPicker()" class="px-3 py-2 text-xs font-semibold bg-surface-800 hover:bg-surface-700 border border-surface-700 text-slate-200 rounded-xl transition">
-                  Preset Images
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Puzzle Visual (Image URL or File Upload) *</label>
+                <div class="flex items-center gap-2">
+                  <label for="input-image-file" class="cursor-pointer px-2.5 py-1 text-xs font-semibold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <span>📁 Upload Image</span>
+                  </label>
+                  <input type="file" id="input-image-file" accept="image/*" class="hidden" onchange="handleImageFileUpload(event)" />
+                  <button type="button" onclick="togglePresetPicker()" class="px-2.5 py-1 text-xs font-semibold bg-surface-800 hover:bg-surface-700 border border-surface-700 text-slate-200 rounded-lg transition">
+                    Presets
+                  </button>
+                </div>
+              </div>
+
+              <div class="relative flex items-center">
+                <input id="input-image-url" type="text" required placeholder="Paste image URL (https://...) or click 'Upload Image' above"
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition font-mono pr-20" />
+                <button type="button" onclick="clearImageInput()" class="absolute right-2 px-2.5 py-1 text-[11px] font-semibold bg-surface-800 hover:bg-surface-700 text-slate-400 hover:text-white rounded-lg transition">
+                  Clear
                 </button>
+              </div>
+
+              <div id="upload-status-badge" class="hidden mt-2 p-2 rounded-lg bg-cyan-950/40 border border-cyan-800/40 text-[11px] text-cyan-300 font-mono flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                  <span id="upload-status-text">File ready</span>
+                </div>
+                <span class="text-slate-400 text-[10px]">Client-optimized</span>
               </div>
 
               <!-- Presets -->
@@ -1029,11 +1049,27 @@ git push -u origin main</pre>
       const existingId = document.getElementById('modal-category-id').value;
       const name = document.getElementById('modal-category-name').value.trim();
       const subs = document.getElementById('modal-subcategories').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!name || name.length < 2) {
+        alert('Please enter a valid category name (at least 2 characters).');
+        return;
+      }
+      if (subs.length === 0) {
+        alert('Please enter at least one subcategory (comma-separated).');
+        return;
+      }
+
       const id = existingId || ('cat_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_'));
       const catObj = { id, name, subcategories: subs };
 
       if (isFirebaseReady && db) {
-        await db.collection('categories').doc(id).set(catObj);
+        try {
+          await db.collection('categories').doc(id).set(catObj);
+          console.log('✓ Category successfully saved to named Firestore database:', id);
+        } catch (err) {
+          console.error('Firestore category write error:', err);
+          alert('Notice on Firestore category save: ' + (err.message || err));
+        }
       }
       const existingIdx = categoriesList.findIndex(c => c.id === id);
       if (existingIdx >= 0) {
@@ -1050,7 +1086,12 @@ git push -u origin main</pre>
     async function deleteCategory(id) {
       if (!confirm('Delete this category?')) return;
       if (isFirebaseReady && db) {
-        await db.collection('categories').doc(id).delete();
+        try {
+          await db.collection('categories').doc(id).delete();
+          console.log('✓ Category deleted from Firestore:', id);
+        } catch (err) {
+          console.error('Firestore category delete error:', err);
+        }
       }
       categoriesList = categoriesList.filter(c => c.id !== id);
       localStorage.setItem('mindblink_categories', JSON.stringify(categoriesList));
@@ -1152,6 +1193,25 @@ git push -u origin main</pre>
       const difficulty = document.getElementById('select-difficulty').value;
 
       const btn = document.getElementById('btn-publish');
+      
+      // Strict client-side validation
+      if (!question || question.length < 5) {
+        alert('Please enter a puzzle question (minimum 5 characters).');
+        return;
+      }
+      if (!imageUrl) {
+        alert('Please provide an image URL or upload an image file.');
+        return;
+      }
+      if (!answer) {
+        alert('Please specify the correct answer.');
+        return;
+      }
+      if (!category || !subcategory) {
+        alert('Please select both a Category and a Subcategory.');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'Publishing to Firestore...';
 
@@ -1169,7 +1229,13 @@ git push -u origin main</pre>
       };
 
       if (isFirebaseReady && db) {
-        await db.collection('puzzles').doc(puzzleId).set(puzzleData);
+        try {
+          await db.collection('puzzles').doc(puzzleId).set(puzzleData);
+          console.log('✓ Successfully saved puzzle to named Firestore database:', puzzleId);
+        } catch (err) {
+          console.error('Firestore puzzle write error:', err);
+          alert('Notice on Firestore write: ' + (err.message || err));
+        }
       }
 
       puzzlesList.unshift(puzzleData);
@@ -1203,6 +1269,7 @@ git push -u origin main</pre>
       document.getElementById('input-question').value = '';
       document.getElementById('input-answer').value = '';
       document.getElementById('input-hint').value = '';
+      clearImageInput();
     }
 
     function dismissShareCard() {
@@ -1447,9 +1514,88 @@ git push -u origin main`;
       document.getElementById('input-image-url').value = url;
       document.getElementById('image-preview').src = url;
       document.getElementById('preset-strip').classList.add('hidden');
+      const badge = document.getElementById('upload-status-badge');
+      if (badge) badge.classList.add('hidden');
     }
+
+    function clearImageInput() {
+      const inputEl = document.getElementById('input-image-url');
+      const previewEl = document.getElementById('image-preview');
+      const statusBadge = document.getElementById('upload-status-badge');
+      const fileInput = document.getElementById('input-image-file');
+      if (inputEl) inputEl.value = '';
+      if (fileInput) fileInput.value = '';
+      if (previewEl) previewEl.src = 'https://placehold.co/600x400/131b2e/f59e0b?text=Visual+Preview';
+      if (statusBadge) statusBadge.classList.add('hidden');
+    }
+
+    function handleImageFileUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please choose a valid image file (PNG, JPG, WebP, GIF, SVG).');
+        return;
+      }
+
+      const statusBadge = document.getElementById('upload-status-badge');
+      const statusText = document.getElementById('upload-status-text');
+      if (statusBadge) statusBadge.classList.remove('hidden');
+      if (statusText) statusText.textContent = `Optimizing ${file.name}...`;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const rawData = event.target.result;
+        
+        // Auto-optimize image through canvas to keep payload well within Firestore limits
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Generate optimized JPEG (0.84 quality)
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.84);
+          
+          const inputEl = document.getElementById('input-image-url');
+          const previewEl = document.getElementById('image-preview');
+          if (inputEl) inputEl.value = compressedDataUrl;
+          if (previewEl) previewEl.src = compressedDataUrl;
+
+          const sizeKb = Math.round(compressedDataUrl.length * 0.75 / 1024);
+          if (statusText) statusText.textContent = `✓ ${file.name} ready (${sizeKb} KB) - Saves directly to Firestore`;
+        };
+        img.onerror = function() {
+          const inputEl = document.getElementById('input-image-url');
+          const previewEl = document.getElementById('image-preview');
+          if (inputEl) inputEl.value = rawData;
+          if (previewEl) previewEl.src = rawData;
+          if (statusText) statusText.textContent = `✓ ${file.name} ready`;
+        };
+        img.src = rawData;
+      };
+      reader.readAsDataURL(file);
+    }
+
     document.getElementById('input-image-url')?.addEventListener('input', (e) => {
-      document.getElementById('image-preview').src = e.target.value.trim();
+      const val = e.target.value.trim();
+      document.getElementById('image-preview').src = val || 'https://placehold.co/600x400/131b2e/f59e0b?text=Visual+Preview';
     });
 
     function loadSamplePreset(type) {
@@ -1510,6 +1656,8 @@ git push -u origin main`;
       saveFirebaseSettings,
       scrollToCreatePuzzle,
       selectPresetImage,
+      clearImageInput,
+      handleImageFileUpload,
       sharePostToSocial,
       showQRCodeModal,
       togglePresetPicker,
