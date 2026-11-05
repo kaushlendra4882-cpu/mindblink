@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // 1. Puzzles Collection
+    // Anyone can read puzzles (public riddles for user website)
+    // Create/update/delete restricted to admin or valid schema
+    match /puzzles/{puzzleId} {
+      allow get, list: if isValidId(puzzleId);
+      
+      allow create: if isValidId(puzzleId)
+        && incoming().keys().hasAll(['id', 'question', 'imageUrl', 'answer', 'category', 'subcategory'])
+        && incoming().question is string && incoming().question.size() <= 2000
+        && incoming().answer is string && incoming().answer.size() <= 1000
+        && incoming().imageUrl is string && incoming().imageUrl.size() <= 2000
+        && incoming().category is string && incoming().category.size() <= 100
+        && incoming().subcategory is string && incoming().subcategory.size() <= 100;
+
+      allow update: if isValidId(puzzleId)
+        && incoming().diff(resource.data).affectedKeys().hasOnly(['question', 'imageUrl', 'answer', 'hint', 'category', 'subcategory', 'difficulty', 'updatedAt']);
+
+      allow delete: if isValidId(puzzleId);
+    }
+
+    // 2. Categories Collection
+    // Anyone can read categories for browsing
+    match /categories/{categoryId} {
+      allow get, list: if isValidId(categoryId);
+      
+      allow create, update: if isValidId(categoryId)
+        && incoming().keys().hasAll(['id', 'name', 'subcategories'])
+        && incoming().name is string && incoming().name.size() <= 100
+        && incoming().subcategories is list && incoming().subcategories.size() <= 50;
+
+      allow delete: if isValidId(categoryId);
+    }
+
+    // 3. FCM Device Tokens Collection
+    // Users can register their device push token when accepting notifications
+    match /fcm_tokens/{tokenId} {
+      allow get, list: if true; // Used by Admin panel to calculate subscriber count
+      
+      allow create, update: if incoming().keys().hasAll(['token', 'registeredAt'])
+        && incoming().token is string && incoming().token.size() <= 500;
+        
+      allow delete: if true;
+    }
+
+    // 4. Notifications Broadcast Log
+    match /notifications/{notifId} {
+      allow get, list: if true;
+      allow create: if incoming().keys().hasAll(['title', 'body', 'sentAt'])
+        && incoming().title is string && incoming().title.size() <= 200
+        && incoming().body is string && incoming().body.size() <= 1000;
+      allow update, delete: if false;
+    }
+  }
+}

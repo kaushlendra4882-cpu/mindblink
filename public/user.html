@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBlink - Solve Mind-Bending Puzzles</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#f59e0b', 600: '#d97706' },
+            surface: { 950: '#070a11', 900: '#0e1422', 850: '#131b2e', 800: '#1b253b', 700: '#283654' }
+          },
+          fontFamily: {
+            sans: ['Manrope', 'system-ui', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="icon" type="image/png" href="/assets/images/mindblink_logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Confetti animation */
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+    }
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: fall 2.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-brand-500/20 selection:text-brand-500">
+
+  <!-- TOP BAR -->
+  <header class="border-b border-surface-800/80 bg-surface-900/95 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Brand Zone with Official MindBlink Logo -->
+      <a href="user.html" class="flex items-center gap-3 whitespace-nowrap shrink-0 group">
+        <img src="/assets/images/mindblink_logo.png" alt="MindBlink - 5-Sec IQ Traps" class="h-10 w-auto object-contain rounded-lg shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform" />
+      </a>
+
+      <!-- Navigation Links -->
+      <nav class="hidden sm:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#puzzle-viewer" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">Daily Puzzle</a>
+        <a href="#browse" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">Browse Categories</a>
+        <button onclick="pickRandomPuzzle()" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">
+          🎲 Random
+        </button>
+      </nav>
+
+      <!-- Zone 3: Notification Bell Action -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button id="btn-notification-prompt" onclick="triggerNotificationPrompt(true)" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-surface-800 hover:bg-surface-700 text-slate-200 border border-surface-700 flex items-center gap-2 transition whitespace-nowrap">
+          <span id="bell-icon" class="text-amber-400">🔔</span>
+          <span id="notification-status-text">Get Alerts</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PUSH NOTIFICATION AUTO-PROMPT BANNER -->
+  <aside id="push-prompt-banner" class="hidden bg-gradient-to-r from-amber-500/15 via-surface-900 to-amber-500/10 border-b border-amber-400/20 px-4 py-3">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span class="text-slate-200">
+          <strong class="text-amber-400 font-semibold">Enable Push Notifications:</strong> Never miss a fresh daily riddle, solution reveal, or weekly logic tournament!
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="dismissNotificationPrompt()" class="px-3 py-1 rounded text-slate-400 hover:text-white transition">Later</button>
+        <button onclick="triggerNotificationPrompt()" class="px-4 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold shadow transition">Allow Notifications</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWER & BROWSER -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 space-y-12">
+
+    <!-- HERO SECTION: DYNAMIC PUZZLE VIEWER -->
+    <section id="puzzle-viewer" class="relative">
+      <div id="viewer-card" class="bg-surface-900 border border-surface-800 rounded-2xl overflow-hidden shadow-2xl relative transition-all">
+        
+        <!-- Header Info Kicker -->
+        <div class="p-6 sm:p-8 pb-4 flex flex-wrap items-center justify-between gap-4 border-b border-surface-800/80">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span id="view-category" class="font-semibold text-amber-400">Category</span>
+            <span class="text-slate-600">·</span>
+            <span id="view-subcategory" class="text-slate-300">Subcategory</span>
+            <span class="text-slate-600">·</span>
+            <span id="view-difficulty" class="text-slate-400">Medium</span>
+          </div>
+
+          <!-- Actions: Share & Next -->
+          <div class="flex items-center gap-2">
+            <button onclick="shareCurrentPuzzle()" class="px-3 py-1.5 text-xs rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-300 border border-surface-700 flex items-center gap-1.5 transition">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+              <span id="share-text">Share Puzzle</span>
+            </button>
+            <button onclick="pickRandomPuzzle()" class="px-3 py-1.5 text-xs rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-300 border border-surface-700 flex items-center gap-1.5 transition">
+              <span>Next</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6 sm:p-8 space-y-6">
+          
+          <!-- Clue / Question Title -->
+          <h1 id="view-question" class="text-xl sm:text-2xl font-bold font-display text-white leading-relaxed">
+            Loading riddle from Firestore...
+          </h1>
+
+          <!-- Visual Clue -->
+          <div class="relative rounded-xl overflow-hidden bg-surface-950 border border-surface-800 max-h-[460px] flex items-center justify-center">
+            <img id="view-image" src="" alt="Visual Clue" class="w-full h-auto max-h-[460px] object-contain transition-transform duration-500 hover:scale-[1.02]" onerror="this.src='https://placehold.co/800x450/131b2e/f59e0b?text=Visual+Clue';" />
+            <div class="absolute bottom-3 right-3 bg-surface-950/80 backdrop-blur-md px-2.5 py-1 rounded text-[11px] text-slate-300 font-mono border border-surface-800">
+              Visual Clue
+            </div>
+          </div>
+
+          <!-- Optional Hint Accordion -->
+          <div id="hint-container" class="hidden">
+            <button onclick="toggleHint()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span id="hint-toggle-text">Need a hint? Click here</span>
+            </button>
+            <div id="hint-text" class="hidden mt-2 p-3 bg-surface-950 border border-surface-800 rounded-xl text-xs text-slate-300 italic"></div>
+          </div>
+
+          <!-- Interactive Guess & Reveal Answer Zone -->
+          <div class="pt-4 border-t border-surface-800/80 space-y-4">
+            
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <input id="user-guess-input" type="text" placeholder="Type your answer to test your mind..."
+                onkeydown="if(event.key==='Enter') checkUserGuess()"
+                class="flex-1 bg-surface-950 border border-surface-800 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition" />
+              
+              <button onclick="checkUserGuess()" class="px-5 py-3 rounded-xl bg-surface-800 hover:bg-surface-700 text-white font-semibold text-xs border border-surface-700 transition">
+                Check Guess
+              </button>
+
+              <!-- REVEAL ANSWER BUTTON -->
+              <button id="btn-reveal" onclick="revealAnswer()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-surface-950 font-display font-extrabold text-xs shadow-lg shadow-amber-500/10 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                <svg class="w-4 h-4 text-surface-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>Reveal Answer</span>
+              </button>
+            </div>
+
+            <!-- Guess Feedback Message -->
+            <div id="guess-feedback" class="hidden text-xs py-2 px-3 rounded-lg"></div>
+
+            <!-- UNHIDDEN ANSWER CONTAINER -->
+            <div id="answer-box" class="hidden bg-gradient-to-r from-emerald-500/10 via-surface-950 to-amber-500/10 border border-emerald-500/30 rounded-xl p-5 space-y-3 transition-all animate-in fade-in duration-300">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono">Official Solution Revealed</span>
+                </div>
+                <button onclick="hideAnswer()" class="text-xs text-slate-500 hover:text-slate-300 transition">Hide</button>
+              </div>
+
+              <div id="view-answer" class="text-base sm:text-lg font-bold text-white tracking-wide"></div>
+
+              <div class="pt-2 flex items-center justify-between text-xs text-slate-400">
+                <button onclick="markAsSolved()" class="text-amber-400 hover:underline flex items-center gap-1 font-semibold">
+                  <span>✓ Mark Solved</span>
+                </button>
+                <span id="streak-counter" class="font-mono text-slate-500">Solved: 0</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="px-6 sm:px-8 py-3 bg-surface-950 border-t border-surface-800 text-[11px] text-slate-500 flex items-center justify-between font-mono">
+          <span>Puzzle ID: <span id="view-id" class="text-slate-400">mb_...</span></span>
+          <span id="view-status-tag" class="text-emerald-400">Synced with Firestore</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: CATEGORY & SUBCATEGORY BROWSING -->
+    <section id="browse" class="space-y-6 pt-4">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold font-display text-white">Browse By Category</h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Explore puzzles crafted for kids, logic masters, and visual puzzle enthusiasts.</p>
+        </div>
+        <div class="w-full sm:w-64">
+          <input id="catalog-search" type="text" oninput="renderCatalog()" placeholder="Search riddles..."
+            class="w-full bg-surface-900 border border-surface-800 focus:border-amber-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none transition" />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 p-1.5 bg-surface-900 border border-surface-800 rounded-xl overflow-x-auto" id="main-category-tabs">
+        <button onclick="selectCatalogCategory('all')" id="tab-all" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-surface-800 text-white shadow-sm transition whitespace-nowrap shrink-0">
+          All Puzzles
+        </button>
+      </div>
+
+      <div id="catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2"></div>
+    </section>
+
+  </main>
+
+  <footer class="mt-auto border-t border-surface-800 bg-surface-950 py-8 text-xs text-slate-500 text-center">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <img src="/assets/images/mindblink_logo.png" alt="MindBlink" class="h-5 w-auto object-contain" />
+        <span>MindBlink · 5-Sec IQ Traps & Visual Paradoxes</span>
+      </div>
+      <div>
+        <a href="#puzzle-viewer" class="text-slate-400 hover:text-amber-400 transition">Back to Top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: USER MULTI-PLATFORM SHARE CHALLENGE -->
+  <div id="modal-user-share" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-surface-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🧠</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Challenge Your Friends!</h3>
+            <p class="text-xs text-slate-400">Can they solve this puzzle before the timer runs out?</p>
+          </div>
+        </div>
+        <button onclick="closeUserShareModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <!-- Puzzle Snippet -->
+      <div class="p-3 bg-surface-950 rounded-xl border border-surface-800 flex items-center gap-3">
+        <img id="user-share-thumb" src="" class="w-12 h-12 rounded-lg object-cover bg-surface-800 shrink-0 border border-surface-700" alt="Puzzle" />
+        <div class="overflow-hidden space-y-1">
+          <p id="user-share-question" class="text-xs text-white font-medium line-clamp-2"></p>
+          <span id="user-share-category" class="text-[10px] text-amber-400 font-mono"></span>
+        </div>
+      </div>
+
+      <!-- Quick Copy Link -->
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Direct Challenge Link</label>
+        <div class="flex items-center gap-2">
+          <div id="user-share-url" class="flex-1 bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 select-all truncate"></div>
+          <button onclick="copyUserChallengeLink()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition shrink-0">
+            <span id="user-copy-btn-text">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi-Platform Share Grid -->
+      <div class="space-y-2">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Share via Social Apps</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button onclick="shareUserToSocial('whatsapp')" class="p-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>WhatsApp</span>
+          </button>
+          <button onclick="shareUserToSocial('telegram')" class="p-2.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8dbf] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>Telegram</span>
+          </button>
+          <button onclick="shareUserToSocial('twitter')" class="p-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-neutral-700 transition">
+            <span>Twitter/X</span>
+          </button>
+          <button onclick="shareUserToSocial('facebook')" class="p-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>Facebook</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE SDK COMPAT -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+
+  <script>
+    /**
+     * MindBlink User Website Engine
+     * Connected to live provisioned Firebase Firestore & FCM
+     */
+    const LIVE_FIREBASE_CONFIG = {
+      projectId: "gen-lang-client-0728617441",
+      appId: "1:48667653274:web:9ccba31228ef7263a31b23",
+      apiKey: "AIzaSyC7_7vmisSlEXQ_x2lM1g7TLfFvVZPIFzk",
+      authDomain: "gen-lang-client-0728617441.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf",
+      storageBucket: "gen-lang-client-0728617441.firebasestorage.app",
+      messagingSenderId: "48667653274"
+    };
+
+    let db = null;
+    let messaging = null;
+    let isFirebaseReady = false;
+    let puzzles = [];
+    let categories = [];
+    let currentPuzzle = null;
+    let selectedCategory = 'all';
+    let solvedList = [];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      initFirebase();
+      initStreak();
+      loadCategories();
+      await loadPuzzles();
+      checkUrlParamsAndRender();
+      setupPushNotificationsOnLoad();
+    });
+
+    function initFirebase() {
+      let config = LIVE_FIREBASE_CONFIG;
+      const stored = localStorage.getItem('mindblink_firebase_config');
+      if (stored) {
+        try { config = JSON.parse(stored); } catch(e){}
+      }
+
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(config);
+        }
+        if (config.firestoreDatabaseId) {
+          db = firebase.app().firestore(config.firestoreDatabaseId);
+        } else {
+          db = firebase.firestore();
+        }
+        try { messaging = firebase.messaging(); } catch (e) {}
+        isFirebaseReady = true;
+      } catch (err) {
+        console.warn('Firebase init fallback:', err);
+      }
+    }
+
+    async function loadPuzzles() {
+      if (isFirebaseReady && db) {
+        try {
+          const snap = await db.collection('puzzles').orderBy('publishedAt', 'desc').get();
+          if (!snap.empty) {
+            puzzles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return;
+          }
+        } catch (e) {
+          console.warn('Firestore load puzzles fallback:', e);
+        }
+      }
+      loadLocalPuzzles();
+    }
+
+    function loadLocalPuzzles() {
+      const local = localStorage.getItem('mindblink_puzzles');
+      if (local) {
+        try { puzzles = JSON.parse(local); } catch(e){}
+      }
+      if (!puzzles.length) {
+        puzzles = [
+          {
+            id: 'mb_illusion_01',
+            question: 'Count the impossible corners. If a traveler ascends three steps on each of the four interlocking quadrants, how many total stairs did they actually elevate?',
+            imageUrl: '/assets/images/puzzle_optical_illusion_1793853160407.jpg',
+            answer: 'Zero steps in net elevation. It is a closed Penrose continuous loop where every ascent returns to the origin.',
+            hint: 'Observe the infinite isometric continuous loop principle.',
+            category: 'Visual Mysteries',
+            subcategory: 'Optical Illusions',
+            difficulty: 'Hard'
+          },
+          {
+            id: 'mb_cipher_02',
+            question: 'The brass dial has six runic faces. Three gears turn clockwise at 12 RPM, two turn counter-clockwise at 18 RPM. What is the rotational velocity of the central master gear?',
+            imageUrl: '/assets/images/puzzle_riddle_treasure_1793853162244.jpg',
+            answer: 'Zero RPM (it remains stationary as the differential lock balance pin).',
+            hint: 'Look closely at the hexagonal lock pin in the center.',
+            category: 'Adults Pro',
+            subcategory: 'Cryptic Clues',
+            difficulty: 'Master'
+          }
+        ];
+      }
+    }
+
+    async function loadCategories() {
+      if (isFirebaseReady && db) {
+        try {
+          const snap = await db.collection('categories').get();
+          if (!snap.empty) {
+            categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderCategoryTabs();
+            return;
+          }
+        } catch(e){}
+      }
+      const l = localStorage.getItem('mindblink_categories');
+      categories = l ? JSON.parse(l) : [
+        { id: 'kids-fun', name: 'Kids Fun' },
+        { id: 'adults-pro', name: 'Adults Pro' },
+        { id: 'visual-mysteries', name: 'Visual Mysteries' }
+      ];
+      renderCategoryTabs();
+    }
+
+    function checkUrlParamsAndRender() {
+      const params = new URLSearchParams(window.location.search);
+      const puzzleId = params.get('id');
+
+      if (puzzleId) {
+        const found = puzzles.find(p => p.id === puzzleId);
+        if (found) {
+          displayPuzzle(found);
+        } else {
+          fetchSingleFromFirestore(puzzleId);
+        }
+      } else if (puzzles.length > 0) {
+        displayPuzzle(puzzles[0]);
+      }
+      renderCatalog();
+    }
+
+    async function fetchSingleFromFirestore(id) {
+      if (isFirebaseReady && db) {
+        try {
+          const doc = await db.collection('puzzles').doc(id).get();
+          if (doc.exists) {
+            const data = { id: doc.id, ...doc.data() };
+            puzzles.unshift(data);
+            displayPuzzle(data);
+            return;
+          }
+        } catch(e) {}
+      }
+      if (puzzles.length > 0) displayPuzzle(puzzles[0]);
+    }
+
+    function displayPuzzle(p) {
+      currentPuzzle = p;
+      document.getElementById('view-question').textContent = p.question;
+      document.getElementById('view-category').textContent = p.category;
+      document.getElementById('view-subcategory').textContent = p.subcategory;
+      document.getElementById('view-difficulty').textContent = p.difficulty || 'Medium';
+      document.getElementById('view-id').textContent = p.id;
+      document.getElementById('view-image').src = p.imageUrl;
+
+      const hintContainer = document.getElementById('hint-container');
+      const hintText = document.getElementById('hint-text');
+      if (p.hint) {
+        hintContainer.classList.remove('hidden');
+        hintText.textContent = p.hint;
+        hintText.classList.add('hidden');
+      } else {
+        hintContainer.classList.add('hidden');
+      }
+
+      hideAnswer();
+      document.getElementById('user-guess-input').value = '';
+      document.getElementById('guess-feedback').classList.add('hidden');
+
+      window.history.replaceState({ id: p.id }, '', `?id=${encodeURIComponent(p.id)}`);
+      document.getElementById('puzzle-viewer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function revealAnswer() {
+      if (!currentPuzzle) return;
+      document.getElementById('view-answer').textContent = currentPuzzle.answer;
+      document.getElementById('answer-box').classList.remove('hidden');
+      spawnConfetti();
+    }
+
+    function hideAnswer() {
+      document.getElementById('answer-box').classList.add('hidden');
+    }
+
+    function checkUserGuess() {
+      if (!currentPuzzle) return;
+      const guess = document.getElementById('user-guess-input').value.trim().toLowerCase();
+      const fb = document.getElementById('guess-feedback');
+      if (!guess) return;
+
+      const answer = currentPuzzle.answer.toLowerCase();
+      if (answer.includes(guess) || guess.includes(answer)) {
+        fb.className = 'text-xs py-2 px-3 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        fb.textContent = '🎉 Brilliant! That is the correct solution.';
+        fb.classList.remove('hidden');
+        revealAnswer();
+        markAsSolved();
+      } else {
+        fb.className = 'text-xs py-2 px-3 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        fb.textContent = 'Not quite! Try another guess or click Reveal Answer.';
+        fb.classList.remove('hidden');
+      }
+    }
+
+    function spawnConfetti() {
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+      for (let i = 0; i < 40; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * window.innerWidth + 'px';
+        piece.style.top = (window.scrollY + Math.random() * 200) + 'px';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 2500);
+      }
+    }
+
+    function markAsSolved() {
+      if (!currentPuzzle) return;
+      if (!solvedList.includes(currentPuzzle.id)) {
+        solvedList.push(currentPuzzle.id);
+        localStorage.setItem('mindblink_solved', JSON.stringify(solvedList));
+      }
+      initStreak();
+    }
+
+    function initStreak() {
+      const l = localStorage.getItem('mindblink_solved');
+      solvedList = l ? JSON.parse(l) : [];
+      const counter = document.getElementById('streak-counter');
+      if (counter) counter.textContent = `Solved: ${solvedList.length}`;
+    }
+
+    function toggleHint() {
+      const hintText = document.getElementById('hint-text');
+      hintText.classList.toggle('hidden');
+    }
+
+    function pickRandomPuzzle() {
+      if (puzzles.length === 0) return;
+      const other = puzzles.filter(p => !currentPuzzle || p.id !== currentPuzzle.id);
+      const pool = other.length > 0 ? other : puzzles;
+      const random = pool[Math.floor(Math.random() * pool.length)];
+      displayPuzzle(random);
+    }
+
+    function shareCurrentPuzzle() {
+      if (!currentPuzzle) return;
+      const fullUrl = window.location.href;
+      document.getElementById('user-share-thumb').src = currentPuzzle.imageUrl;
+      document.getElementById('user-share-question').textContent = currentPuzzle.question;
+      document.getElementById('user-share-category').textContent = `${currentPuzzle.category} · ${currentPuzzle.subcategory}`;
+      document.getElementById('user-share-url').textContent = fullUrl;
+      document.getElementById('user-copy-btn-text').textContent = 'Copy';
+      document.getElementById('modal-user-share').classList.remove('hidden');
+    }
+
+    function closeUserShareModal() {
+      document.getElementById('modal-user-share').classList.add('hidden');
+    }
+
+    function copyUserChallengeLink() {
+      const fullUrl = window.location.href;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        const btn = document.getElementById('user-copy-btn-text');
+        if (btn) {
+          btn.textContent = 'Copied! ✓';
+          setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+      });
+    }
+
+    function shareUserToSocial(platform) {
+      if (!currentPuzzle) return;
+      const url = window.location.href;
+      const text = `🧠 MindBlink Challenge: Can you solve this puzzle?\n\n"${currentPuzzle.question}"\n\nTake the challenge here:`;
+
+      let dest = '';
+      switch (platform) {
+        case 'whatsapp':
+          dest = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`;
+          break;
+        case 'telegram':
+          dest = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+          break;
+        case 'twitter':
+          dest = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=MindBlink,Puzzle`;
+          break;
+        case 'facebook':
+          dest = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+          break;
+      }
+      if (dest) {
+        window.open(dest, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    function renderCategoryTabs() {
+      const c = document.getElementById('main-category-tabs');
+      if (!c) return;
+      c.innerHTML = `<button onclick="selectCatalogCategory('all')" id="tab-all" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-surface-800 text-white">All Puzzles</button>` +
+        categories.map(cat => `
+          <button onclick="selectCatalogCategory('${cat.name}')" class="px-3.5 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition whitespace-nowrap shrink-0">${cat.name}</button>
+        `).join('');
+    }
+
+    function selectCatalogCategory(name) {
+      selectedCategory = name;
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const grid = document.getElementById('catalog-grid');
+      const search = document.getElementById('catalog-search')?.value.toLowerCase().trim() || '';
+      if (!grid) return;
+
+      const filtered = puzzles.filter(p => {
+        if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
+        if (search && !p.question.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-surface-900 border border-surface-800 hover:border-surface-700 rounded-xl overflow-hidden cursor-pointer flex flex-col justify-between transition group" onclick="displayPuzzleById('${p.id}')">
+          <div>
+            <div class="h-40 bg-surface-950 overflow-hidden">
+              <img src="${p.imageUrl}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/400x200/131b2e/f59e0b?text=Puzzle';">
+            </div>
+            <div class="p-4 space-y-2">
+              <span class="text-xs text-amber-400 font-semibold">${p.category} · ${p.subcategory}</span>
+              <h3 class="font-bold text-white text-sm line-clamp-2 leading-snug">${p.question}</h3>
+            </div>
+          </div>
+          <div class="px-4 py-3 bg-surface-950/50 border-t border-surface-800/80 flex justify-end">
+            <button class="px-3 py-1 rounded bg-surface-800 text-amber-400 font-bold text-xs">Solve</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function displayPuzzleById(id) {
+      const f = puzzles.find(p => p.id === id);
+      if (f) displayPuzzle(f);
+    }
+
+    // PUSH NOTIFICATION AUTO-PROMPT ON SHARED LINK VISIT
+    function setupPushNotificationsOnLoad() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === 'granted') {
+        document.getElementById('notification-status-text').textContent = 'Alerts On';
+        registerDeviceFCMToken();
+      } else if (Notification.permission === 'default') {
+        document.getElementById('push-prompt-banner')?.classList.remove('hidden');
+        setTimeout(() => triggerNotificationPrompt(false), 1500);
+      }
+    }
+
+    async function triggerNotificationPrompt(isClick = false) {
+      if (!("Notification" in window)) return;
+      try {
+        const p = await Notification.requestPermission();
+        if (p === 'granted') {
+          dismissNotificationPrompt();
+          document.getElementById('notification-status-text').textContent = 'Alerts On';
+          await registerDeviceFCMToken();
+          new Notification("Welcome to MindBlink! 🧠", {
+            body: "You're now subscribed to daily puzzle reveals.",
+            icon: '/assets/images/puzzle_optical_illusion_1793853160407.jpg'
+          });
+        }
+      } catch(e){}
+    }
+
+    function dismissNotificationPrompt() {
+      document.getElementById('push-prompt-banner')?.classList.add('hidden');
+    }
+
+    async function registerDeviceFCMToken() {
+      let token = 'web_tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+      if (messaging) {
+        try { token = await messaging.getToken(); } catch(e){}
+      }
+      if (isFirebaseReady && db) {
+        try {
+          await db.collection('fcm_tokens').doc(token.substring(0, 36)).set({
+            token, registeredAt: new Date().toISOString()
+          }, { merge: true });
+        } catch(e){}
+      }
+      let sub = JSON.parse(localStorage.getItem('mindblink_subscribers') || '[]');
+      if (!sub.some(s => s.token === token)) {
+        sub.push({ token, registeredAt: new Date().toISOString() });
+        localStorage.setItem('mindblink_subscribers', JSON.stringify(sub));
+      }
+    }
+  </script>
+</body>
+</html>

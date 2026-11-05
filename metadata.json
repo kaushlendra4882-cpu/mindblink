@@ -1,0 +1,6 @@
+{
+  "name": "MindBlink",
+  "description": "MindBlink Puzzle Publishing & Discovery Platform with Admin Dashboard, Dynamic Links, Firestore, and Push Notifications",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

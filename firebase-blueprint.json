@@ -1,0 +1,142 @@
+{
+  "entities": {
+    "Puzzle": {
+      "title": "Puzzle",
+      "description": "A riddle, brainteaser, or visual puzzle published by admin",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the puzzle"
+        },
+        "question": {
+          "type": "string",
+          "description": "The puzzle prompt or riddle question"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Visual clue image URL"
+        },
+        "answer": {
+          "type": "string",
+          "description": "Correct solution revealed by user action"
+        },
+        "hint": {
+          "type": "string",
+          "description": "Optional clue for solving"
+        },
+        "category": {
+          "type": "string",
+          "description": "Primary category"
+        },
+        "subcategory": {
+          "type": "string",
+          "description": "Subcategory"
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "Difficulty level"
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "ISO timestamp of publication"
+        }
+      },
+      "required": ["id", "question", "imageUrl", "answer", "category", "subcategory", "publishedAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Taxonomy category with subcategories",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Category document ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of category"
+        },
+        "subcategories": {
+          "type": "array",
+          "description": "List of subcategories"
+        }
+      },
+      "required": ["id", "name", "subcategories"]
+    },
+    "FCMToken": {
+      "title": "FCMToken",
+      "description": "Device push notification subscriber token",
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "FCM device registration token"
+        },
+        "registeredAt": {
+          "type": "string",
+          "description": "ISO timestamp of registration"
+        },
+        "platform": {
+          "type": "string",
+          "description": "Client platform descriptor"
+        }
+      },
+      "required": ["token", "registeredAt"]
+    },
+    "NotificationBroadcast": {
+      "title": "NotificationBroadcast",
+      "description": "Push notification broadcast history record",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Notification title"
+        },
+        "body": {
+          "type": "string",
+          "description": "Notification body"
+        },
+        "targetUrl": {
+          "type": "string",
+          "description": "Deep link target URL"
+        },
+        "sentAt": {
+          "type": "string",
+          "description": "ISO timestamp when broadcast"
+        },
+        "recipientCount": {
+          "type": "number",
+          "description": "Count of recipients"
+        }
+      },
+      "required": ["title", "body", "sentAt"]
+    }
+  },
+  "firestore": {
+    "/puzzles/{puzzleId}": {
+      "schema": {
+        "$ref": "#/entities/Puzzle"
+      },
+      "description": "Puzzles and brainteasers collection"
+    },
+    "/categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Categories and subcategories collection"
+    },
+    "/fcm_tokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/FCMToken"
+      },
+      "description": "Registered browser push tokens for broadcasting"
+    },
+    "/notifications/{notifId}": {
+      "schema": {
+        "$ref": "#/entities/NotificationBroadcast"
+      },
+      "description": "Broadcast notification history logs"
+    }
+  }
+}
