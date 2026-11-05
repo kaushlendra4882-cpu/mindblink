@@ -104,6 +104,11 @@
             <span id="view-subcategory" class="text-slate-300">Subcategory</span>
             <span class="text-slate-600">·</span>
             <span id="view-difficulty" class="text-slate-400">Medium</span>
+            <a href="https://uplcm.com/4/12196086" target="_blank" rel="noopener noreferrer" onclick="triggerMonetagDirectLink('sponsor_pill')" class="hidden sm:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 text-[10px] font-bold border border-amber-400/30 transition">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>⚡ Sponsor Bonus</span>
+              <span class="text-[9px] text-slate-400 font-mono">↗</span>
+            </a>
           </div>
 
           <!-- Actions: Share & Next -->
@@ -136,10 +141,16 @@
 
           <!-- Optional Hint Accordion -->
           <div id="hint-container" class="hidden">
-            <button onclick="toggleHint()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span id="hint-toggle-text">Need a hint? Click here</span>
-            </button>
+            <div class="flex items-center justify-between">
+              <button onclick="toggleHint()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="hint-toggle-text">Need a hint? Click here</span>
+              </button>
+              <a href="https://uplcm.com/4/12196086" target="_blank" rel="noopener noreferrer" onclick="triggerMonetagDirectLink('bonus_clues_link')" class="text-[11px] text-amber-400/80 hover:text-amber-300 flex items-center gap-1 transition">
+                <span>💡 Bonus Clues (Sponsored)</span>
+                <span class="text-[9px]">↗</span>
+              </a>
+            </div>
             <div id="hint-text" class="hidden mt-2 p-3 bg-surface-950 border border-surface-800 rounded-xl text-xs text-slate-300 italic"></div>
           </div>
 
@@ -408,6 +419,7 @@
       await loadPuzzles();
       checkUrlParamsAndRender();
       setupPushNotificationsOnLoad();
+      setupMonetagMonetization();
     });
 
     function initFirebase() {
@@ -557,11 +569,65 @@
       document.getElementById('puzzle-viewer').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // ------------------------------------------------------------------
+    // MONETAG DIRECT LINK MONETIZATION ENGINE
+    // Direct Ad URL: https://uplcm.com/4/12196086
+    // ------------------------------------------------------------------
+    const MONETAG_DIRECT_LINK = 'https://uplcm.com/4/12196086';
+
+    function triggerMonetagDirectLink(triggerSource = 'action') {
+      try {
+        const now = Date.now();
+        const lastOpen = parseInt(sessionStorage.getItem('mb_monetag_last_open') || '0', 10);
+
+        // Ambient tap throttle (6s) to ensure smooth puzzle browsing
+        if (triggerSource === 'ambient_tap' && (now - lastOpen < 6000)) {
+          return;
+        }
+        sessionStorage.setItem('mb_monetag_last_open', now.toString());
+
+        // Dispatch synthetic click via popup-friendly anchor
+        const a = document.createElement('a');
+        a.href = MONETAG_DIRECT_LINK;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        console.warn('Monetag trigger error handled:', err);
+      }
+    }
+
+    function setupMonetagMonetization() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isSharedPuzzle = urlParams.has('id');
+
+      // Seamless visitor trigger on shared puzzle links:
+      // When a visitor arrives via any shared puzzle link (user.html?id=...),
+      // listen for their first interaction anywhere on screen to trigger Monetag
+      if (isSharedPuzzle) {
+        const alreadyOpenedForVisit = sessionStorage.getItem('mb_shared_ad_opened');
+        if (!alreadyOpenedForVisit) {
+          const onFirstVisitorTouch = (e) => {
+            const explicitBtn = e.target.closest('#btn-reveal, #btn-notification-prompt, [onclick*="checkUserGuess"], [onclick*="pickRandomPuzzle"]');
+            if (!explicitBtn) {
+              triggerMonetagDirectLink('shared_link_first_touch');
+              sessionStorage.setItem('mb_shared_ad_opened', '1');
+            }
+            document.removeEventListener('click', onFirstVisitorTouch, true);
+          };
+          document.addEventListener('click', onFirstVisitorTouch, true);
+        }
+      }
+    }
+
     function revealAnswer() {
       if (!currentPuzzle) return;
       document.getElementById('view-answer').textContent = currentPuzzle.answer;
       document.getElementById('answer-box').classList.remove('hidden');
       spawnConfetti();
+      triggerMonetagDirectLink('reveal_answer');
     }
 
     function hideAnswer() {
@@ -573,6 +639,9 @@
       const guess = document.getElementById('user-guess-input').value.trim().toLowerCase();
       const fb = document.getElementById('guess-feedback');
       if (!guess) return;
+
+      // Trigger Monetag direct link on answer verification
+      triggerMonetagDirectLink('check_guess');
 
       const answer = currentPuzzle.answer.toLowerCase();
       if (answer.includes(guess) || guess.includes(answer)) {
@@ -620,11 +689,16 @@
 
     function toggleHint() {
       const hintText = document.getElementById('hint-text');
+      const wasHidden = hintText.classList.contains('hidden');
       hintText.classList.toggle('hidden');
+      if (wasHidden) {
+        triggerMonetagDirectLink('view_hint');
+      }
     }
 
     function pickRandomPuzzle() {
       if (puzzles.length === 0) return;
+      triggerMonetagDirectLink('next_puzzle');
       const other = puzzles.filter(p => !currentPuzzle || p.id !== currentPuzzle.id);
       const pool = other.length > 0 ? other : puzzles;
       const random = pool[Math.floor(Math.random() * pool.length)];
@@ -727,7 +801,10 @@
 
     function displayPuzzleById(id) {
       const f = puzzles.find(p => p.id === id);
-      if (f) displayPuzzle(f);
+      if (f) {
+        displayPuzzle(f);
+        triggerMonetagDirectLink('browse_solve');
+      }
     }
 
     // PUSH NOTIFICATION AUTO-PROMPT ON SHARED LINK VISIT
@@ -797,6 +874,7 @@
       shareUserToSocial,
       toggleHint,
       triggerNotificationPrompt,
+      triggerMonetagDirectLink,
       renderCatalog
     });
   </script>
