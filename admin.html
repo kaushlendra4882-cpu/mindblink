@@ -69,6 +69,43 @@
       const m = document.getElementById('modal-github');
       if (m) m.classList.add('hidden');
     };
+    window.openFirebaseSettingsModal = window.openFirebaseSettingsModal || function() {
+      const m = document.getElementById('modal-firebase');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeFirebaseSettingsModal = window.closeFirebaseSettingsModal || function() {
+      const m = document.getElementById('modal-firebase');
+      if (m) m.classList.add('hidden');
+    };
+    window.openLinkGeneratorModal = window.openLinkGeneratorModal || function(id) {
+      const m = document.getElementById('modal-share-puzzle') || document.getElementById('modal-qr');
+      if (m) m.classList.remove('hidden');
+    };
+    window.openShareModalForPuzzle = window.openShareModalForPuzzle || function(id) {
+      const m = document.getElementById('modal-share-puzzle');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeSharePuzzleModal = window.closeSharePuzzleModal || function() {
+      const m = document.getElementById('modal-share-puzzle');
+      if (m) m.classList.add('hidden');
+    };
+    window.showQRCodeModal = window.showQRCodeModal || function(url) {
+      const m = document.getElementById('modal-qr');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeQRCodeModal = window.closeQRCodeModal || function() {
+      const m = document.getElementById('modal-qr');
+      if (m) m.classList.add('hidden');
+    };
+    window.togglePresetPicker = window.togglePresetPicker || function() {
+      const p = document.getElementById('preset-strip');
+      if (p) p.classList.toggle('hidden');
+    };
+    window.clearImageInput = window.clearImageInput || function() {
+      const i = document.getElementById('input-image-url');
+      if (i) i.value = '';
+    };
+    window.filterPuzzlesTable = window.filterPuzzlesTable || function() {};
   </script>
   <link rel="icon" type="image/png" href="assets/images/mindblink_logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1214,6 +1251,23 @@ git push -u origin main</pre>
       }).join('');
     }
 
+    function filterPuzzlesTable() {
+      const input = document.getElementById('search-puzzles');
+      const query = (input?.value || '').trim().toLowerCase();
+      if (!query) {
+        renderPuzzlesTable(null);
+        return;
+      }
+      const filtered = puzzlesList.filter(p =>
+        (p.question || '').toLowerCase().includes(query) ||
+        (p.category || '').toLowerCase().includes(query) ||
+        (p.subcategory || '').toLowerCase().includes(query) ||
+        (p.answer || '').toLowerCase().includes(query) ||
+        (p.id || '').toLowerCase().includes(query)
+      );
+      renderPuzzlesTable(filtered);
+    }
+
     let currentPublishedPuzzle = null;
 
     async function handlePublishPuzzle(e) {
@@ -1534,6 +1588,23 @@ git push -u origin main`;
     function closeQRCodeModal() { document.getElementById('modal-qr').classList.add('hidden'); }
 
     // Helpers & Modals
+    function openLinkGeneratorModal(puzzleId = null) {
+      if (puzzleId) {
+        openShareModalForPuzzle(puzzleId);
+        return;
+      }
+      if (lastGeneratedUrl) {
+        showQRCodeModal(lastGeneratedUrl);
+        return;
+      }
+      const first = (puzzlesList && puzzlesList.length > 0) ? puzzlesList[0] : null;
+      if (first) {
+        openShareModalForPuzzle(first.id);
+      } else {
+        showQRCodeModal(`${window.location.origin}/user.html`);
+      }
+    }
+
     function openFirebaseSettingsModal() {
       document.getElementById('firebase-config-input').value = JSON.stringify(LIVE_FIREBASE_CONFIG, null, 2);
       document.getElementById('modal-firebase').classList.remove('hidden');
@@ -1706,8 +1777,12 @@ git push -u origin main`;
       updateGithubGitUrl,
       handlePublishPuzzle,
       handleSaveCategory,
-      handleSendPushNotification
+      handleSendPushNotification,
+      renderPuzzlesTable,
+      renderCategoriesUI,
+      populateCategoryDropdowns
     });
+    window.renderCategories = renderCategoriesUI;
   </script>
 </body>
 </html>
