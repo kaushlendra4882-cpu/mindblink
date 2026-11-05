@@ -36,7 +36,41 @@
       }
     }
   </script>
-  <link rel="icon" type="image/png" href="/assets/images/mindblink_logo.png" />
+  <script>
+    // Early global bridge for immediate button responsiveness before module finishes async loading
+    window.scrollToCreatePuzzle = function() {
+      const el = document.getElementById('puzzles') || document.getElementById('puzzle-form');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => { const q = document.getElementById('input-question'); if (q) q.focus(); }, 300);
+      }
+    };
+    window.openCategoryModal = window.openCategoryModal || function(catId) {
+      const m = document.getElementById('modal-category');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeCategoryModal = window.closeCategoryModal || function() {
+      const m = document.getElementById('modal-category');
+      if (m) m.classList.add('hidden');
+    };
+    window.openCloudSqlModal = window.openCloudSqlModal || function() {
+      const m = document.getElementById('modal-cloudsql');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeCloudSqlModal = window.closeCloudSqlModal || function() {
+      const m = document.getElementById('modal-cloudsql');
+      if (m) m.classList.add('hidden');
+    };
+    window.openGithubModal = window.openGithubModal || function() {
+      const m = document.getElementById('modal-github');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeGithubModal = window.closeGithubModal || function() {
+      const m = document.getElementById('modal-github');
+      if (m) m.classList.add('hidden');
+    };
+  </script>
+  <link rel="icon" type="image/png" href="assets/images/mindblink_logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -55,7 +89,7 @@
       
       <!-- Zone 1: Brand Wordmark with Official Logo -->
       <a href="admin.html" class="flex items-center gap-3 text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0 group">
-        <img src="/assets/images/mindblink_logo.png" alt="MindBlink" class="h-10 w-auto object-contain rounded-lg shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform" />
+        <img src="assets/images/mindblink_logo.png" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/mindblink_logo.png';}" alt="MindBlink" class="h-10 w-auto object-contain rounded-lg shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform" />
         <span class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-800 text-amber-400 border border-amber-400/20 uppercase tracking-wider">Admin Dashboard</span>
       </a>
 
@@ -219,16 +253,16 @@
 
               <!-- Presets -->
               <div id="preset-strip" class="hidden mt-3 p-3 bg-surface-950 border border-surface-800 rounded-xl grid grid-cols-3 gap-2">
-                <div onclick="selectPresetImage('/assets/images/puzzle_optical_illusion_1793853160407.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
-                  <img src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Illusion" class="h-16 w-full object-cover">
+                <div onclick="selectPresetImage('assets/images/puzzle_optical_illusion_1793853160407.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400 transition-colors">
+                  <img src="assets/images/puzzle_optical_illusion_1793853160407.jpg" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/puzzle_optical_illusion_1793853160407.jpg';}" alt="Illusion" class="h-16 w-full object-cover">
                   <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Optical Illusion</span>
                 </div>
-                <div onclick="selectPresetImage('/assets/images/puzzle_riddle_treasure_1793853162244.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
-                  <img src="/assets/images/puzzle_riddle_treasure_1793853162244.jpg" alt="Cipher" class="h-16 w-full object-cover">
+                <div onclick="selectPresetImage('assets/images/puzzle_riddle_treasure_1793853162244.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400 transition-colors">
+                  <img src="assets/images/puzzle_riddle_treasure_1793853162244.jpg" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/puzzle_riddle_treasure_1793853162244.jpg';}" alt="Cipher" class="h-16 w-full object-cover">
                   <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Cipher Box</span>
                 </div>
-                <div onclick="selectPresetImage('/assets/images/puzzle_pattern_logic_1793853160900.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
-                  <img src="/assets/images/puzzle_pattern_logic_1793853160900.jpg" alt="Pattern" class="h-16 w-full object-cover">
+                <div onclick="selectPresetImage('assets/images/puzzle_pattern_logic_1793853160900.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400 transition-colors">
+                  <img src="assets/images/puzzle_pattern_logic_1793853160900.jpg" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/puzzle_pattern_logic_1793853160900.jpg';}" alt="Pattern" class="h-16 w-full object-cover">
                   <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Pattern Logic</span>
                 </div>
               </div>
@@ -277,7 +311,7 @@
           <div class="space-y-4">
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Live Visual Preview</label>
             <div class="w-full h-48 rounded-xl bg-surface-950 border border-surface-800 flex items-center justify-center overflow-hidden relative">
-              <img id="image-preview" src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Preview" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/131b2e/f59e0b?text=Visual+Preview';" />
+              <img id="image-preview" src="assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Preview" class="w-full h-full object-cover" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/puzzle_optical_illusion_1793853160407.jpg';}else{this.src='https://placehold.co/600x400/131b2e/f59e0b?text=Visual+Preview';}" />
             </div>
 
             <button id="btn-publish" type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-surface-950 font-display font-extrabold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
@@ -314,7 +348,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         <!-- Visual Thumbnail & Meta -->
         <div class="lg:col-span-5 flex items-start gap-4 p-3 bg-surface-950/80 rounded-xl border border-surface-800">
-          <img id="share-card-thumb" src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Puzzle Thumbnail" class="w-20 h-20 rounded-lg object-cover bg-surface-800 shrink-0 border border-surface-700" />
+          <img id="share-card-thumb" src="assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Puzzle Thumbnail" class="w-20 h-20 rounded-lg object-cover bg-surface-800 shrink-0 border border-surface-700" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src='/assets/images/puzzle_optical_illusion_1793853160407.jpg';}" />
           <div class="space-y-1.5 overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
               <span id="share-card-category" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20">Category</span>
@@ -780,7 +814,7 @@ git push -u origin main</pre>
       {
         id: 'mb_illusion_01',
         question: 'Count the impossible corners. If a traveler ascends three steps on each of the four interlocking quadrants, how many total stairs did they actually elevate?',
-        imageUrl: '/assets/images/puzzle_optical_illusion_1793853160407.jpg',
+        imageUrl: 'assets/images/puzzle_optical_illusion_1793853160407.jpg',
         answer: 'Zero steps in net elevation. It is a closed Penrose continuous loop where every ascent returns to the origin.',
         hint: 'Observe the infinite isometric continuous loop principle.',
         category: 'Visual Mysteries',
@@ -791,7 +825,7 @@ git push -u origin main</pre>
       {
         id: 'mb_cipher_02',
         question: 'The brass dial has six runic faces. Three gears turn clockwise at 12 RPM, two turn counter-clockwise at 18 RPM. What is the rotational velocity of the central master gear?',
-        imageUrl: '/assets/images/puzzle_riddle_treasure_1793853162244.jpg',
+        imageUrl: 'assets/images/puzzle_riddle_treasure_1793853162244.jpg',
         answer: 'Zero RPM (it remains stationary as the differential lock balance pin).',
         hint: 'Look closely at the hexagonal lock pin in the center.',
         category: 'Adults Pro',
@@ -802,7 +836,7 @@ git push -u origin main</pre>
       {
         id: 'mb_pattern_03',
         question: 'In the chromatic neon mandala, each outer violet tile requires two adjacent yellow facets to maintain symmetry. If the perimeter has 12 points, how many yellow facets are needed?',
-        imageUrl: '/assets/images/puzzle_pattern_logic_1793853160900.jpg',
+        imageUrl: 'assets/images/puzzle_pattern_logic_1793853160900.jpg',
         answer: '12 yellow facets (each shared between pairs along the concentric boundary).',
         hint: 'Notice the symmetry of hexagonal tessellation.',
         category: 'Kids Fun',
@@ -1387,7 +1421,7 @@ git push -u origin main</pre>
       }
 
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { body, icon: '/assets/images/puzzle_optical_illusion_1793853160407.jpg' });
+        new Notification(title, { body, icon: 'assets/images/mindblink_logo.png' });
       }
 
       alert(`Broadcast sent to ${subscribersList.length} subscribed devices!`);
@@ -1404,7 +1438,7 @@ git push -u origin main</pre>
         if (p === 'granted') {
           new Notification("MindBlink Broadcast Test 🧠", {
             body: "Push notification alert received! Subscriptions are operational.",
-            icon: '/assets/images/puzzle_optical_illusion_1793853160407.jpg'
+            icon: 'assets/images/mindblink_logo.png'
           });
         }
       });
@@ -1499,9 +1533,7 @@ git push -u origin main`;
     }
     function closeQRCodeModal() { document.getElementById('modal-qr').classList.add('hidden'); }
 
-    // Helpers
-    function openCategoryModal() { document.getElementById('modal-category').classList.remove('hidden'); }
-    function closeCategoryModal() { document.getElementById('modal-category').classList.add('hidden'); }
+    // Helpers & Modals
     function openFirebaseSettingsModal() {
       document.getElementById('firebase-config-input').value = JSON.stringify(LIVE_FIREBASE_CONFIG, null, 2);
       document.getElementById('modal-firebase').classList.remove('hidden');
@@ -1601,18 +1633,18 @@ git push -u origin main`;
     function loadSamplePreset(type) {
       if (type === 'illusion') {
         document.getElementById('input-question').value = 'Count the impossible corners. If a traveler ascends three steps on each quadrant, how many total stairs did they elevate?';
-        selectPresetImage('/assets/images/puzzle_optical_illusion_1793853160407.jpg');
+        selectPresetImage('assets/images/puzzle_optical_illusion_1793853160407.jpg');
         document.getElementById('input-answer').value = 'Zero net elevation in the Penrose loop.';
         document.getElementById('input-hint').value = 'Trace the continuous closed isometric path.';
         document.getElementById('select-category').value = 'Visual Mysteries';
       } else if (type === 'cipher') {
         document.getElementById('input-question').value = 'The ancient cipher box requires aligning three concentric dials. Which bezel controls the locking pin?';
-        selectPresetImage('/assets/images/puzzle_riddle_treasure_1793853162244.jpg');
+        selectPresetImage('assets/images/puzzle_riddle_treasure_1793853162244.jpg');
         document.getElementById('input-answer').value = 'The innermost gold runic bezel.';
         document.getElementById('select-category').value = 'Adults Pro';
       } else {
         document.getElementById('input-question').value = 'In the chromatic mandala, each outer violet tile requires two yellow facets. If there are 12 points, how many yellow facets are needed?';
-        selectPresetImage('/assets/images/puzzle_pattern_logic_1793853160900.jpg');
+        selectPresetImage('assets/images/puzzle_pattern_logic_1793853160900.jpg');
         document.getElementById('input-answer').value = '12 yellow facets.';
         document.getElementById('select-category').value = 'Kids Fun';
       }
@@ -1620,7 +1652,14 @@ git push -u origin main`;
     }
 
     function scrollToCreatePuzzle() {
-      document.getElementById('puzzles').scrollIntoView({ behavior: 'smooth' });
+      const el = document.getElementById('puzzles') || document.getElementById('puzzle-form');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+          const q = document.getElementById('input-question');
+          if (q) q.focus();
+        }, 300);
+      }
     }
 
     function escapeHtml(t) {
