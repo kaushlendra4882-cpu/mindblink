@@ -716,12 +716,24 @@ git push -u origin main</pre>
     </div>
   </div>
 
-  <!-- FIREBASE SDK COMPAT -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+  <!-- FIREBASE MODULAR SDK (Direct Custom Database Routing) -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      getDoc, 
+      getDocs, 
+      setDoc, 
+      deleteDoc, 
+      addDoc, 
+      onSnapshot, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
-  <script>
     /**
      * MindBlink Admin Dashboard Logic
      * Live Firestore Integration with auto-provisioned credentials & Cloud SQL Bridge
@@ -789,6 +801,79 @@ git push -u origin main</pre>
     let subscribersList = [];
     let lastGeneratedUrl = '';
 
+    /**
+     * Firestore Client Adapter
+     * Directly binds to named database 'ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf'
+     */
+    function createFirestoreClient(rawDb) {
+      return {
+        collection(colName) {
+          const colRef = collection(rawDb, colName);
+          return {
+            doc(docId) {
+              const dRef = doc(rawDb, colName, docId);
+              return {
+                async get() {
+                  const s = await getDoc(dRef);
+                  return { exists: s.exists(), id: s.id, data: () => s.data() };
+                },
+                async set(data, options) {
+                  return await setDoc(dRef, data, options || {});
+                },
+                async delete() {
+                  return await deleteDoc(dRef);
+                }
+              };
+            },
+            async add(data) {
+              return await addDoc(colRef, data);
+            },
+            async get() {
+              const snap = await getDocs(colRef);
+              return {
+                empty: snap.empty,
+                docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+              };
+            },
+            orderBy(field, direction) {
+              const q = query(colRef, orderBy(field, direction || 'asc'));
+              return {
+                async get() {
+                  const snap = await getDocs(q);
+                  return {
+                    empty: snap.empty,
+                    docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                  };
+                },
+                onSnapshot(onNext, onError) {
+                  return onSnapshot(q, snap => {
+                    onNext({
+                      empty: snap.empty,
+                      docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                    });
+                  }, (err) => {
+                    console.warn('Query listener notice:', err.message);
+                    if (onError) onError(err);
+                  });
+                }
+              };
+            },
+            onSnapshot(onNext, onError) {
+              return onSnapshot(colRef, snap => {
+                onNext({
+                  empty: snap.empty,
+                  docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                });
+              }, (err) => {
+                console.warn('Collection listener notice:', err.message);
+                if (onError) onError(err);
+              });
+            }
+          };
+        }
+      };
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initFirebase();
       initPublicLinks();
@@ -806,25 +891,24 @@ git push -u origin main</pre>
       }
 
       try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(config);
-        }
+        const apps = getApps();
+        const app = apps.length ? apps[0] : initializeApp(config);
         
-        // Connect specifically to the provisioned database ID
-        if (config.firestoreDatabaseId) {
-          db = firebase.app().firestore(config.firestoreDatabaseId);
-        } else {
-          db = firebase.firestore();
-        }
+        // Explicitly route to user's provisioned named database
+        const dbId = config.firestoreDatabaseId || "ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf";
+        const rawDb = getFirestore(app, dbId);
+        db = createFirestoreClient(rawDb);
 
-        try { messaging = firebase.messaging(); } catch (e) {}
+        try { messaging = getMessaging(app); } catch (e) {}
         isFirebaseReady = true;
-        document.getElementById('backend-type-text').textContent = 'Live Firestore (Connected)';
-        console.log('MindBlink Firestore connected successfully!');
+        const statusEl = document.getElementById('backend-type-text');
+        if (statusEl) statusEl.textContent = 'Live Firestore (Connected: ' + dbId + ')';
+        console.log('MindBlink Firestore connected successfully to database:', dbId);
       } catch (err) {
-        console.error('Firebase initialization error:', err);
+        console.warn('Firebase initialization notice:', err);
         isFirebaseReady = false;
-        document.getElementById('backend-type-text').textContent = 'Local Sandbox';
+        const statusEl = document.getElementById('backend-type-text');
+        if (statusEl) statusEl.textContent = 'Local Sandbox';
       }
     }
 
@@ -1396,6 +1480,47 @@ git push -u origin main`;
     function escapeHtml(t) {
       return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
+
+    // Export functions to window for inline HTML onclick/onsubmit/oninput handlers
+    Object.assign(window, {
+      handleCategoryChange,
+      closeCategoryModal,
+      closeCloudSqlModal,
+      closeFirebaseSettingsModal,
+      closeGithubModal,
+      closeQRCodeModal,
+      closeSharePuzzleModal,
+      copyDynamicLink,
+      copyGithubUrl,
+      copyModalShareLink,
+      copyToClipboard,
+      deleteCategory,
+      dismissShareCard,
+      downloadCompleteProjectBackup,
+      exportPostgresSqlDump,
+      generateQrForPuzzle,
+      loadSamplePreset,
+      openCategoryModal,
+      openCloudSqlModal,
+      openFirebaseSettingsModal,
+      openGithubModal,
+      openLinkGeneratorModal,
+      openShareModalForPuzzle,
+      runSqlSimulation,
+      saveFirebaseSettings,
+      scrollToCreatePuzzle,
+      selectPresetImage,
+      sharePostToSocial,
+      showQRCodeModal,
+      togglePresetPicker,
+      triggerModalSocial,
+      triggerSelfTestNotification,
+      filterPuzzlesTable,
+      updateGithubGitUrl,
+      handlePublishPuzzle,
+      handleSaveCategory,
+      handleSendPushNotification
+    });
   </script>
 </body>
 </html>

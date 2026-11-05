@@ -287,12 +287,24 @@
     </div>
   </div>
 
-  <!-- FIREBASE SDK COMPAT -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+  <!-- FIREBASE MODULAR SDK (Direct Custom Database Routing) -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      getDoc, 
+      getDocs, 
+      setDoc, 
+      deleteDoc, 
+      addDoc, 
+      onSnapshot, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
-  <script>
     /**
      * MindBlink User Website Engine
      * Connected to live provisioned Firebase Firestore & FCM
@@ -316,6 +328,79 @@
     let selectedCategory = 'all';
     let solvedList = [];
 
+    /**
+     * Firestore Client Adapter
+     * Directly binds to named database 'ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf'
+     */
+    function createFirestoreClient(rawDb) {
+      return {
+        collection(colName) {
+          const colRef = collection(rawDb, colName);
+          return {
+            doc(docId) {
+              const dRef = doc(rawDb, colName, docId);
+              return {
+                async get() {
+                  const s = await getDoc(dRef);
+                  return { exists: s.exists(), id: s.id, data: () => s.data() };
+                },
+                async set(data, options) {
+                  return await setDoc(dRef, data, options || {});
+                },
+                async delete() {
+                  return await deleteDoc(dRef);
+                }
+              };
+            },
+            async add(data) {
+              return await addDoc(colRef, data);
+            },
+            async get() {
+              const snap = await getDocs(colRef);
+              return {
+                empty: snap.empty,
+                docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+              };
+            },
+            orderBy(field, direction) {
+              const q = query(colRef, orderBy(field, direction || 'asc'));
+              return {
+                async get() {
+                  const snap = await getDocs(q);
+                  return {
+                    empty: snap.empty,
+                    docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                  };
+                },
+                onSnapshot(onNext, onError) {
+                  return onSnapshot(q, snap => {
+                    onNext({
+                      empty: snap.empty,
+                      docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                    });
+                  }, (err) => {
+                    console.warn('Query listener notice:', err.message);
+                    if (onError) onError(err);
+                  });
+                }
+              };
+            },
+            onSnapshot(onNext, onError) {
+              return onSnapshot(colRef, snap => {
+                onNext({
+                  empty: snap.empty,
+                  docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                });
+              }, (err) => {
+                console.warn('Collection listener notice:', err.message);
+                if (onError) onError(err);
+              });
+            }
+          };
+        }
+      };
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       initFirebase();
       initStreak();
@@ -333,16 +418,15 @@
       }
 
       try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(config);
-        }
-        if (config.firestoreDatabaseId) {
-          db = firebase.app().firestore(config.firestoreDatabaseId);
-        } else {
-          db = firebase.firestore();
-        }
-        try { messaging = firebase.messaging(); } catch (e) {}
+        const apps = getApps();
+        const app = apps.length ? apps[0] : initializeApp(config);
+        const dbId = config.firestoreDatabaseId || "ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf";
+        const rawDb = getFirestore(app, dbId);
+        db = createFirestoreClient(rawDb);
+
+        try { messaging = getMessaging(app); } catch (e) {}
         isFirebaseReady = true;
+        console.log('User site Firestore connected to:', dbId);
       } catch (err) {
         console.warn('Firebase init fallback:', err);
       }
@@ -696,6 +780,25 @@
         localStorage.setItem('mindblink_subscribers', JSON.stringify(sub));
       }
     }
+
+    // Export functions to window for HTML event handlers
+    Object.assign(window, {
+      checkUserGuess,
+      closeUserShareModal,
+      copyUserChallengeLink,
+      dismissNotificationPrompt,
+      displayPuzzleById,
+      hideAnswer,
+      markAsSolved,
+      pickRandomPuzzle,
+      revealAnswer,
+      selectCatalogCategory,
+      shareCurrentPuzzle,
+      shareUserToSocial,
+      toggleHint,
+      triggerNotificationPrompt,
+      renderCatalog
+    });
   </script>
 </body>
 </html>

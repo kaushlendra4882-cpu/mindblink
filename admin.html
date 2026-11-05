@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBlink Admin Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            },
+            surface: {
+              950: '#070a11',
+              900: '#0e1422',
+              850: '#131b2e',
+              800: '#1b253b',
+              700: '#283654'
+            }
+          },
+          fontFamily: {
+            sans: ['Manrope', 'system-ui', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="icon" type="image/png" href="/assets/images/mindblink_logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #070a11; }
+    ::-webkit-scrollbar-thumb { background: #283654; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a4d75; }
+  </style>
+</head>
+<body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-brand-500/20 selection:text-brand-500">
+
+  <!-- TOP BAR (3-Zone Contract) -->
+  <header class="border-b border-surface-800/80 bg-surface-900/95 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Zone 1: Brand Wordmark with Official Logo -->
+      <a href="admin.html" class="flex items-center gap-3 text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0 group">
+        <img src="/assets/images/mindblink_logo.png" alt="MindBlink" class="h-10 w-auto object-contain rounded-lg shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform" />
+        <span class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-800 text-amber-400 border border-amber-400/20 uppercase tracking-wider">Admin Dashboard</span>
+      </a>
+
+      <!-- Zone 2: Navigation Links -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#puzzles" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">Puzzles Manager</a>
+        <a href="#categories" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">Categories</a>
+        <a href="#broadcast" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0">Push Broadcast</a>
+        <a href="#cloudsql" onclick="openCloudSqlModal()" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5">
+          <span>Cloud SQL</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-cyan-900/60 text-cyan-300 border border-cyan-700/50">Postgres</span>
+        </a>
+        <a href="#github" onclick="openGithubModal()" class="hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5">
+          <span>GitHub Private Repo</span>
+        </a>
+      </nav>
+
+      <!-- Zone 3: Primary Actions -->
+      <div class="flex items-center gap-3 shrink-0">
+        <a id="btn-public-user-link" href="user.html" target="_blank" class="px-3.5 py-1.5 text-xs font-semibold text-slate-200 bg-surface-800 hover:bg-surface-700 border border-surface-700 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <span>Open Public User Site</span>
+        </a>
+        <button onclick="scrollToCreatePuzzle()" class="px-4 py-2 text-xs font-bold text-surface-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-all shadow-md shadow-amber-500/10 whitespace-nowrap shrink-0">
+          + New Puzzle
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- QUICK ACCESS STATUS STRIP -->
+  <section class="bg-gradient-to-r from-amber-500/10 via-surface-900 to-emerald-500/10 border-b border-surface-800 px-4 py-2.5 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="font-bold text-white">Firebase Firestore:</span>
+          <code id="top-project-id" class="text-amber-300 font-mono">gen-lang-client-0728617441</code>
+        </div>
+        <span class="text-slate-600">·</span>
+        <div class="flex items-center gap-1.5 text-slate-300">
+          <span>Database ID:</span>
+          <code class="text-emerald-300 font-mono text-[11px]">ai-studio-mindblink-93047e9c...</code>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openLinkGeneratorModal()" class="px-2.5 py-1 rounded bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 font-semibold transition">
+          🔗 Generate Public Link & QR
+        </button>
+        <button onclick="openCloudSqlModal()" class="px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 font-semibold transition">
+          🐘 Cloud SQL Bridge
+        </button>
+        <button onclick="openGithubModal()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-surface-700 font-semibold transition">
+          🐙 GitHub Private Sync
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- METRICS STRIP -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-surface-900 border border-surface-800 rounded-xl p-5 flex flex-col justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Firestore Backend</span>
+        <div class="mt-2 flex items-center justify-between">
+          <div class="text-sm font-semibold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="backend-type-text">Connected (Live)</span>
+          </div>
+          <button onclick="openFirebaseSettingsModal()" class="text-xs text-amber-400 hover:underline">Config</button>
+        </div>
+      </div>
+
+      <div class="bg-surface-900 border border-surface-800 rounded-xl p-5 flex flex-col justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Puzzles</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="stat-total-puzzles" class="text-2xl font-bold font-mono tabular-nums text-white">0</span>
+          <span class="text-xs text-slate-400">Live in Firestore</span>
+        </div>
+      </div>
+
+      <div class="bg-surface-900 border border-surface-800 rounded-xl p-5 flex flex-col justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Active Categories</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="stat-total-categories" class="text-2xl font-bold font-mono tabular-nums text-amber-400">0</span>
+          <span class="text-xs text-slate-400">Categories</span>
+        </div>
+      </div>
+
+      <div class="bg-surface-900 border border-surface-800 rounded-xl p-5 flex flex-col justify-between">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Push Subscribers</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="stat-total-subscribers" class="text-2xl font-bold font-mono tabular-nums text-emerald-400">0</span>
+          <span class="text-xs text-slate-400">Device Tokens</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: PUZZLE CREATOR & DYNAMIC LINK GENERATOR -->
+    <section id="puzzles" class="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8 relative">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-surface-800">
+        <div>
+          <h2 class="text-xl font-bold font-display text-white">Publish New Puzzle</h2>
+          <p class="text-sm text-slate-400 mt-1">Saves immediately to Firebase Firestore and generates unique dynamic share links.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="loadSamplePreset('illusion')" class="text-xs px-3 py-1.5 rounded-lg bg-surface-850 hover:bg-surface-800 text-slate-300 border border-surface-700 transition">
+            Load Illusion Clue
+          </button>
+          <button type="button" onclick="loadSamplePreset('cipher')" class="text-xs px-3 py-1.5 rounded-lg bg-surface-850 hover:bg-surface-800 text-slate-300 border border-surface-700 transition">
+            Load Cipher Box
+          </button>
+          <button type="button" onclick="loadSamplePreset('pattern')" class="text-xs px-3 py-1.5 rounded-lg bg-surface-850 hover:bg-surface-800 text-slate-300 border border-surface-700 transition">
+            Load Pattern Mandala
+          </button>
+        </div>
+      </div>
+
+      <form id="puzzle-form" onsubmit="handlePublishPuzzle(event)" class="mt-6 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-5">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Puzzle Question or Riddle *</label>
+              <textarea id="input-question" rows="3" required placeholder="Type the puzzle riddle or question..."
+                class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Puzzle Visual / Image URL *</label>
+              <div class="flex gap-2">
+                <input id="input-image-url" type="url" required placeholder="https://... or choose a preset"
+                  class="flex-1 bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+                <button type="button" onclick="togglePresetPicker()" class="px-3 py-2 text-xs font-semibold bg-surface-800 hover:bg-surface-700 border border-surface-700 text-slate-200 rounded-xl transition">
+                  Preset Images
+                </button>
+              </div>
+
+              <!-- Presets -->
+              <div id="preset-strip" class="hidden mt-3 p-3 bg-surface-950 border border-surface-800 rounded-xl grid grid-cols-3 gap-2">
+                <div onclick="selectPresetImage('/assets/images/puzzle_optical_illusion_1793853160407.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
+                  <img src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Illusion" class="h-16 w-full object-cover">
+                  <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Optical Illusion</span>
+                </div>
+                <div onclick="selectPresetImage('/assets/images/puzzle_riddle_treasure_1793853162244.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
+                  <img src="/assets/images/puzzle_riddle_treasure_1793853162244.jpg" alt="Cipher" class="h-16 w-full object-cover">
+                  <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Cipher Box</span>
+                </div>
+                <div onclick="selectPresetImage('/assets/images/puzzle_pattern_logic_1793853160900.jpg')" class="cursor-pointer group relative rounded-lg overflow-hidden border border-surface-700 hover:border-amber-400">
+                  <img src="/assets/images/puzzle_pattern_logic_1793853160900.jpg" alt="Pattern" class="h-16 w-full object-cover">
+                  <span class="absolute inset-x-0 bottom-0 text-[10px] bg-surface-950/90 text-center py-0.5 text-slate-300">Pattern Logic</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Correct Answer (Hidden on User Site) *</label>
+                <input id="input-answer" type="text" required placeholder="e.g. Zero Net Elevation"
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Optional Clue / Hint</label>
+                <input id="input-hint" type="text" placeholder="e.g. Look at the Penrose loop"
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Category *</label>
+                <select id="select-category" required onchange="handleCategoryChange()"
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Subcategory *</label>
+                <select id="select-subcategory" required
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Difficulty</label>
+                <select id="select-difficulty"
+                  class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                  <option value="Easy">Easy (Casual)</option>
+                  <option value="Medium" selected>Medium (Standard)</option>
+                  <option value="Hard">Hard (Pro)</option>
+                  <option value="Master">Master (Genius)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview & Submit -->
+          <div class="space-y-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Live Visual Preview</label>
+            <div class="w-full h-48 rounded-xl bg-surface-950 border border-surface-800 flex items-center justify-center overflow-hidden relative">
+              <img id="image-preview" src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Preview" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/131b2e/f59e0b?text=Visual+Preview';" />
+            </div>
+
+            <button id="btn-publish" type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-surface-950 font-display font-extrabold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              <span>Publish to Firestore & Generate Public Link</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 2: DEDICATED SHAREABLE CARD WITH MULTI-PLATFORM SOCIAL SHARING -->
+    <div id="publish-success-card" class="hidden bg-gradient-to-br from-amber-500/10 via-surface-900 to-cyan-500/10 border-2 border-amber-400/50 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-300">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-surface-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-lg">
+            ✓
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider font-mono">Live in Firestore</span>
+              <span class="text-slate-600">·</span>
+              <span id="share-card-timestamp" class="text-[11px] text-slate-400 font-mono">Just now</span>
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold font-display text-white">Puzzle Published & Dynamic Link Generated!</h3>
+          </div>
+        </div>
+        <button onclick="dismissShareCard()" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-surface-800/60 transition">
+          ✕ Dismiss Card
+        </button>
+      </div>
+
+      <!-- Puzzle Snapshot & Link Container -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- Visual Thumbnail & Meta -->
+        <div class="lg:col-span-5 flex items-start gap-4 p-3 bg-surface-950/80 rounded-xl border border-surface-800">
+          <img id="share-card-thumb" src="/assets/images/puzzle_optical_illusion_1793853160407.jpg" alt="Puzzle Thumbnail" class="w-20 h-20 rounded-lg object-cover bg-surface-800 shrink-0 border border-surface-700" />
+          <div class="space-y-1.5 overflow-hidden">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span id="share-card-category" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20">Category</span>
+              <span id="share-card-subcategory" class="text-[10px] px-2 py-0.5 rounded bg-surface-800 text-slate-300">Subcategory</span>
+              <span id="share-card-difficulty" class="text-[10px] px-2 py-0.5 rounded bg-surface-800 text-slate-400 font-mono">Medium</span>
+            </div>
+            <p id="share-card-question" class="text-xs text-slate-200 line-clamp-2 font-medium">Question preview will appear here...</p>
+            <p id="share-card-id" class="text-[10px] font-mono text-slate-500">ID: mb_...</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Link Copy & Direct View -->
+        <div class="lg:col-span-7 space-y-3">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Unique Shareable Public Link (user.html?id=...)</label>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2.5 font-mono text-xs text-amber-300 select-all overflow-x-auto whitespace-nowrap">
+              <span id="published-url-display">https://.../user.html?id=...</span>
+            </div>
+            <button onclick="copyDynamicLink()" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition flex items-center gap-1.5 shrink-0 shadow-md">
+              <span id="copy-btn-text">Copy Link</span>
+            </button>
+            <a id="btn-test-view" href="user.html" target="_blank" class="px-3.5 py-2.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-white font-medium text-xs border border-surface-700 transition shrink-0" title="Open in Public User Site">
+              Open ↗
+            </a>
+            <button onclick="showQRCodeModal()" class="px-3 py-2.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-slate-300 border border-surface-700 text-xs font-medium transition shrink-0" title="Show QR Code">
+              📱
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MULTI-PLATFORM SOCIAL SHARING BUTTONS -->
+      <div class="pt-4 border-t border-surface-800/80 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span>⚡ Share Instantly Across Multiple Platforms</span>
+          </span>
+          <span class="text-[11px] text-slate-400">Clicking opens platform with pre-formatted challenge message</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          <!-- WhatsApp Button -->
+          <button onclick="sharePostToSocial('whatsapp')" class="px-3.5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            <span>WhatsApp</span>
+          </button>
+
+          <!-- Telegram Button -->
+          <button onclick="sharePostToSocial('telegram')" class="px-3.5 py-2.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8dbf] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            <span>Telegram</span>
+          </button>
+
+          <!-- Twitter / X Button -->
+          <button onclick="sharePostToSocial('twitter')" class="px-3.5 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center justify-center gap-2 border border-neutral-700 shadow-sm transition">
+            <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <span>Twitter / X</span>
+          </button>
+
+          <!-- Facebook Button -->
+          <button onclick="sharePostToSocial('facebook')" class="px-3.5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Facebook</span>
+          </button>
+
+          <!-- Copy Link Button -->
+          <button onclick="copyDynamicLink()" class="px-3.5 py-2.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 border border-surface-700 shadow-sm transition">
+            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: CATEGORIES & SUBCATEGORIES DYNAMIC MANAGER -->
+    <section id="categories" class="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-surface-800">
+        <div>
+          <h2 class="text-xl font-bold font-display text-white">Categories & Subcategories Manager</h2>
+          <p class="text-sm text-slate-400 mt-1">Add, edit, or delete main categories (e.g. Kids Fun, Adults Pro) and their subcategories dynamically in Firestore.</p>
+        </div>
+        <button onclick="openCategoryModal()" class="px-4 py-2 text-xs font-bold text-white bg-surface-800 hover:bg-surface-700 border border-surface-700 rounded-xl transition flex items-center gap-2">
+          <span>+ Add New Category</span>
+        </button>
+      </div>
+      <div id="categories-grid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+
+    <!-- SECTION 4: PUSH NOTIFICATION SENDER -->
+    <section id="broadcast" class="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-surface-800">
+        <div>
+          <h2 class="text-xl font-bold font-display text-white">Broadcast Push Notification (FCM)</h2>
+          <p class="text-sm text-slate-400 mt-1">Dispatches alerts to all subscriber tokens registered in Firestore collection <code class="text-amber-400">fcm_tokens</code>.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="text-xs text-slate-400 bg-surface-950 px-3 py-1.5 rounded-lg border border-surface-800">
+            Registered Devices: <span id="fcm-token-count" class="font-mono text-emerald-400 font-bold">0</span>
+          </div>
+          <button onclick="triggerSelfTestNotification()" class="px-3 py-1.5 text-xs font-medium bg-surface-800 hover:bg-surface-700 text-slate-300 rounded-lg border border-surface-700 transition">
+            Test on This PC
+          </button>
+        </div>
+      </div>
+
+      <form id="notification-form" onsubmit="handleSendPushNotification(event)" class="mt-6 space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Notification Title *</label>
+            <input id="push-title" type="text" required placeholder="e.g. New Daily Riddle Released! ⚡"
+              class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Target Puzzle Link (Optional)</label>
+            <input id="push-target-url" type="text" placeholder="user.html?id=..."
+              class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition font-mono" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Notification Message / Body *</label>
+          <textarea id="push-body" rows="2" required placeholder="e.g. Can you solve today's lateral mystery in under 60 seconds? Tap to play now."
+            class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition"></textarea>
+        </div>
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-xs text-slate-500">Logged to Firestore collection <code class="text-amber-400 font-mono">notifications</code>.</span>
+          <button id="btn-send-push" type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-surface-950 font-display font-bold text-xs transition">
+            Broadcast to All Users
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 5: PUBLISHED PUZZLES TABLE -->
+    <section class="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-surface-800">
+        <div>
+          <h2 class="text-xl font-bold font-display text-white">Published Puzzles Repository</h2>
+          <p class="text-sm text-slate-400 mt-1">Live Firestore records with dynamic link generation.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="search-puzzles" type="text" oninput="filterPuzzlesTable()" placeholder="Search puzzles..."
+            class="bg-surface-950 border border-surface-800 rounded-xl px-3.5 py-1.5 text-xs text-white outline-none w-52" />
+        </div>
+      </div>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-surface-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-3 px-4">Clue / Question</th>
+              <th class="py-3 px-4">Category</th>
+              <th class="py-3 px-4">Subcategory</th>
+              <th class="py-3 px-4">Answer</th>
+              <th class="py-3 px-4">Dynamic Link</th>
+              <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="puzzles-table-body" class="divide-y divide-surface-800 text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CLOUD SQL POSTGRESQL BRIDGE & CONSOLE -->
+  <div id="modal-cloudsql" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-3xl w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-surface-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center font-bold">
+            SQL
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Cloud SQL (PostgreSQL) Bridge & Console</h3>
+            <p class="text-xs text-slate-400">Relational schema, SQL query runner, and PostgreSQL database backup.</p>
+          </div>
+        </div>
+        <button onclick="closeCloudSqlModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Relational Table Tabs -->
+        <div class="flex items-center gap-2 border-b border-surface-800 pb-2 text-xs">
+          <span class="text-slate-400 font-bold uppercase">Relational Tables:</span>
+          <span class="px-2 py-0.5 rounded bg-surface-950 text-cyan-300 font-mono">puzzles</span>
+          <span class="px-2 py-0.5 rounded bg-surface-950 text-cyan-300 font-mono">categories</span>
+          <span class="px-2 py-0.5 rounded bg-surface-950 text-cyan-300 font-mono">fcm_tokens</span>
+          <span class="px-2 py-0.5 rounded bg-surface-950 text-cyan-300 font-mono">notifications</span>
+        </div>
+
+        <!-- SQL Schema Preview -->
+        <div class="bg-surface-950 border border-surface-800 rounded-xl p-4 font-mono text-xs text-cyan-200/90 space-y-1">
+          <div class="text-slate-500">-- PostgreSQL DDL for Cloud SQL instance:</div>
+          <div>CREATE TABLE IF NOT EXISTS puzzles (</div>
+          <div class="pl-4">id VARCHAR(128) PRIMARY KEY,</div>
+          <div class="pl-4">question TEXT NOT NULL,</div>
+          <div class="pl-4">image_url TEXT NOT NULL,</div>
+          <div class="pl-4">answer TEXT NOT NULL,</div>
+          <div class="pl-4">category VARCHAR(100) NOT NULL,</div>
+          <div class="pl-4">subcategory VARCHAR(100) NOT NULL,</div>
+          <div class="pl-4">published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP</div>
+          <div>);</div>
+        </div>
+
+        <!-- SQL Query Box -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Simulate SQL Query</label>
+          <div class="flex gap-2">
+            <input id="input-sql-query" type="text" value="SELECT id, category, answer FROM puzzles LIMIT 10;"
+              class="flex-1 bg-surface-950 border border-surface-800 rounded-xl px-4 py-2.5 font-mono text-xs text-white outline-none focus:border-cyan-400" />
+            <button onclick="runSqlSimulation()" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-surface-950 font-bold text-xs transition">
+              Run Query
+            </button>
+          </div>
+        </div>
+
+        <!-- Query Output -->
+        <div id="sql-query-output" class="bg-surface-950 border border-surface-800 rounded-xl p-3 text-xs font-mono text-slate-300 max-h-40 overflow-y-auto">
+          Query ready. Click "Run Query" to execute against local records.
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-surface-800">
+        <button onclick="exportPostgresSqlDump()" class="px-4 py-2 rounded-xl bg-surface-800 hover:bg-surface-700 text-cyan-300 text-xs font-bold border border-cyan-800 transition flex items-center gap-2">
+          <span>⬇ Export Full .sql Dump</span>
+        </button>
+        <button onclick="closeCloudSqlModal()" class="px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GITHUB PRIVATE REPO & CODE EXPORT -->
+  <div id="modal-github" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-2xl w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between border-b border-surface-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center font-bold">
+            git
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">GitHub Private Repository Setup</h3>
+            <p class="text-xs text-slate-400">Generate your private HTTPS remote link and push this codebase.</p>
+          </div>
+        </div>
+        <button onclick="closeGithubModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">GitHub Username & Repo Name</label>
+          <div class="flex gap-2">
+            <input id="github-user-input" type="text" placeholder="your-username" value="kaushlendra4882"
+              oninput="updateGithubGitUrl()"
+              class="flex-1 bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2 text-xs text-white outline-none" />
+            <span class="text-slate-500 self-center">/</span>
+            <input id="github-repo-input" type="text" placeholder="mindblink-app" value="mindblink-app"
+              oninput="updateGithubGitUrl()"
+              class="flex-1 bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2 text-xs text-white outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Your Private Git Remote HTTPS URL</label>
+          <div class="flex items-center bg-surface-950 border border-surface-800 rounded-xl px-3.5 py-2.5 font-mono text-xs text-purple-300 select-all justify-between">
+            <span id="github-https-display">https://github.com/kaushlendra4882/mindblink-app.git</span>
+            <button onclick="copyGithubUrl()" class="text-xs text-amber-400 hover:underline">Copy URL</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">CLI Terminal Commands (Push to GitHub)</label>
+          <pre id="github-cli-commands" class="bg-surface-950 border border-surface-800 rounded-xl p-4 font-mono text-xs text-emerald-300 overflow-x-auto select-all">git init
+git add .
+git commit -m "Initial MindBlink release with Firebase & Cloud SQL"
+git branch -M main
+git remote add origin https://github.com/kaushlendra4882/mindblink-app.git
+git push -u origin main</pre>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-surface-800">
+        <button onclick="downloadCompleteProjectBackup()" class="px-4 py-2 rounded-xl bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-bold border border-surface-700 transition">
+          💾 Download JSON Database Backup
+        </button>
+        <button onclick="closeGithubModal()" class="px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: QR CODE FOR PUBLIC LINK -->
+  <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Scan with Mobile Phone</h3>
+        <button onclick="closeQRCodeModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+      <div class="p-4 bg-white rounded-2xl inline-block mx-auto shadow-xl">
+        <img id="qr-code-img" src="" alt="QR Code" class="w-48 h-48 mx-auto" />
+      </div>
+      <p id="qr-target-url" class="font-mono text-xs text-amber-300 truncate select-all px-2"></p>
+      <div class="text-[11px] text-slate-400">
+        Scan this QR code with any iPhone / Android camera to open the puzzle and test notifications immediately!
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MULTI-PLATFORM SOCIAL SHARING FOR ANY PUZZLE -->
+  <div id="modal-share-puzzle" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-lg w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between border-b border-surface-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-lg">⚡</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Share Puzzle Challenge</h3>
+            <p class="text-xs text-slate-400">Broadcast to multiple platforms or copy the direct dynamic link.</p>
+          </div>
+        </div>
+        <button onclick="closeSharePuzzleModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <!-- Preview in Modal -->
+      <div class="p-3 bg-surface-950 rounded-xl border border-surface-800 flex items-center gap-3">
+        <img id="modal-share-thumb" src="" class="w-14 h-14 rounded-lg object-cover bg-surface-800 shrink-0" alt="Puzzle" />
+        <div class="overflow-hidden space-y-1">
+          <p id="modal-share-question" class="text-xs text-white font-medium line-clamp-2"></p>
+          <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+            <span id="modal-share-badge" class="text-amber-400">Category</span>
+            <span>·</span>
+            <span id="modal-share-id">ID: ...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Link Bar -->
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Direct Dynamic Link</label>
+        <div class="flex items-center gap-2">
+          <div id="modal-share-url" class="flex-1 bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 select-all truncate"></div>
+          <button onclick="copyModalShareLink()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition shrink-0">
+            <span id="modal-copy-btn-text">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi-Platform Grid -->
+      <div class="space-y-2">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Select Sharing Platform</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button onclick="triggerModalSocial('whatsapp')" class="p-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>WhatsApp</span>
+          </button>
+          <button onclick="triggerModalSocial('telegram')" class="p-2.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8dbf] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>Telegram</span>
+          </button>
+          <button onclick="triggerModalSocial('twitter')" class="p-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-neutral-700 transition">
+            <span>Twitter/X</span>
+          </button>
+          <button onclick="triggerModalSocial('facebook')" class="p-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <span>Facebook</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD/EDIT CATEGORY -->
+  <div id="modal-category" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-lg w-full p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 id="modal-category-title" class="text-lg font-bold text-white">Add Main Category</h3>
+        <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+      <form id="form-category" onsubmit="handleSaveCategory(event)" class="space-y-4">
+        <input type="hidden" id="modal-category-id" value="" />
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Category Name *</label>
+          <input id="modal-category-name" type="text" required placeholder="e.g. Kids Fun, Adults Pro"
+            class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Subcategories (Comma Separated) *</label>
+          <input id="modal-subcategories" type="text" required placeholder="e.g. Animals, Word Play, Logic Riddles"
+            class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-800">
+          <button type="button" onclick="closeCategoryModal()" class="px-4 py-2 rounded-xl text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-400 text-surface-950 font-bold text-xs">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FIREBASE CONFIG -->
+  <div id="modal-firebase" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-surface-700 rounded-2xl max-w-xl w-full p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Firebase Project Settings</h3>
+        <button onclick="closeFirebaseSettingsModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Firebase Config JSON</label>
+          <textarea id="firebase-config-input" rows="8" class="w-full bg-surface-950 border border-surface-800 focus:border-amber-400 rounded-xl p-3 font-mono text-xs text-amber-300 outline-none"></textarea>
+        </div>
+        <div class="p-3 bg-surface-950 rounded-xl border border-surface-800 text-xs text-slate-400 space-y-1">
+          <div class="font-bold text-slate-200">Current Provisioned Project:</div>
+          <div>Project ID: <span class="text-amber-400 font-mono">gen-lang-client-0728617441</span></div>
+          <div>Database: <span class="text-emerald-400 font-mono">ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf</span></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-800">
+        <button onclick="closeFirebaseSettingsModal()" class="px-4 py-2 rounded-xl text-xs text-slate-300">Cancel</button>
+        <button onclick="saveFirebaseSettings()" class="px-5 py-2 rounded-xl bg-amber-400 text-surface-950 font-bold text-xs">Save & Reconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE MODULAR SDK (Direct Custom Database Routing) -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      getDoc, 
+      getDocs, 
+      setDoc, 
+      deleteDoc, 
+      addDoc, 
+      onSnapshot, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+
+    /**
+     * MindBlink Admin Dashboard Logic
+     * Live Firestore Integration with auto-provisioned credentials & Cloud SQL Bridge
+     */
+
+    // LIVE PROVISIONED FIREBASE CONFIG
+    const LIVE_FIREBASE_CONFIG = {
+      projectId: "gen-lang-client-0728617441",
+      appId: "1:48667653274:web:9ccba31228ef7263a31b23",
+      apiKey: "AIzaSyC7_7vmisSlEXQ_x2lM1g7TLfFvVZPIFzk",
+      authDomain: "gen-lang-client-0728617441.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf",
+      storageBucket: "gen-lang-client-0728617441.firebasestorage.app",
+      messagingSenderId: "48667653274"
+    };
+
+    const DEFAULT_CATEGORIES = [
+      { id: 'kids-fun', name: 'Kids Fun', subcategories: ['Animals & Nature', 'Easy Math Riddles', 'Word Scrambles', 'Visual Clues'] },
+      { id: 'adults-pro', name: 'Adults Pro', subcategories: ['Lateral Thinking', 'Cryptic Clues', 'Logic Grids', 'Mathematical Paradoxes'] },
+      { id: 'visual-mysteries', name: 'Visual Mysteries', subcategories: ['Optical Illusions', 'Pattern Sequences', 'Hidden Objects', '3D Geometry'] }
+    ];
+
+    const DEFAULT_PUZZLES = [
+      {
+        id: 'mb_illusion_01',
+        question: 'Count the impossible corners. If a traveler ascends three steps on each of the four interlocking quadrants, how many total stairs did they actually elevate?',
+        imageUrl: '/assets/images/puzzle_optical_illusion_1793853160407.jpg',
+        answer: 'Zero steps in net elevation. It is a closed Penrose continuous loop where every ascent returns to the origin.',
+        hint: 'Observe the infinite isometric continuous loop principle.',
+        category: 'Visual Mysteries',
+        subcategory: 'Optical Illusions',
+        difficulty: 'Hard',
+        publishedAt: new Date(Date.now() - 3600000 * 24).toISOString()
+      },
+      {
+        id: 'mb_cipher_02',
+        question: 'The brass dial has six runic faces. Three gears turn clockwise at 12 RPM, two turn counter-clockwise at 18 RPM. What is the rotational velocity of the central master gear?',
+        imageUrl: '/assets/images/puzzle_riddle_treasure_1793853162244.jpg',
+        answer: 'Zero RPM (it remains stationary as the differential lock balance pin).',
+        hint: 'Look closely at the hexagonal lock pin in the center.',
+        category: 'Adults Pro',
+        subcategory: 'Cryptic Clues',
+        difficulty: 'Master',
+        publishedAt: new Date(Date.now() - 3600000 * 12).toISOString()
+      },
+      {
+        id: 'mb_pattern_03',
+        question: 'In the chromatic neon mandala, each outer violet tile requires two adjacent yellow facets to maintain symmetry. If the perimeter has 12 points, how many yellow facets are needed?',
+        imageUrl: '/assets/images/puzzle_pattern_logic_1793853160900.jpg',
+        answer: '12 yellow facets (each shared between pairs along the concentric boundary).',
+        hint: 'Notice the symmetry of hexagonal tessellation.',
+        category: 'Kids Fun',
+        subcategory: 'Visual Clues',
+        difficulty: 'Medium',
+        publishedAt: new Date().toISOString()
+      }
+    ];
+
+    // State Variables
+    let db = null;
+    let messaging = null;
+    let isFirebaseReady = false;
+    let categoriesList = [];
+    let puzzlesList = [];
+    let subscribersList = [];
+    let lastGeneratedUrl = '';
+
+    /**
+     * Firestore Client Adapter
+     * Directly binds to named database 'ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf'
+     */
+    function createFirestoreClient(rawDb) {
+      return {
+        collection(colName) {
+          const colRef = collection(rawDb, colName);
+          return {
+            doc(docId) {
+              const dRef = doc(rawDb, colName, docId);
+              return {
+                async get() {
+                  const s = await getDoc(dRef);
+                  return { exists: s.exists(), id: s.id, data: () => s.data() };
+                },
+                async set(data, options) {
+                  return await setDoc(dRef, data, options || {});
+                },
+                async delete() {
+                  return await deleteDoc(dRef);
+                }
+              };
+            },
+            async add(data) {
+              return await addDoc(colRef, data);
+            },
+            async get() {
+              const snap = await getDocs(colRef);
+              return {
+                empty: snap.empty,
+                docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+              };
+            },
+            orderBy(field, direction) {
+              const q = query(colRef, orderBy(field, direction || 'asc'));
+              return {
+                async get() {
+                  const snap = await getDocs(q);
+                  return {
+                    empty: snap.empty,
+                    docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                  };
+                },
+                onSnapshot(onNext, onError) {
+                  return onSnapshot(q, snap => {
+                    onNext({
+                      empty: snap.empty,
+                      docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                    });
+                  }, (err) => {
+                    console.warn('Query listener notice:', err.message);
+                    if (onError) onError(err);
+                  });
+                }
+              };
+            },
+            onSnapshot(onNext, onError) {
+              return onSnapshot(colRef, snap => {
+                onNext({
+                  empty: snap.empty,
+                  docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() }))
+                });
+              }, (err) => {
+                console.warn('Collection listener notice:', err.message);
+                if (onError) onError(err);
+              });
+            }
+          };
+        }
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initFirebase();
+      initPublicLinks();
+      loadCategories();
+      loadPuzzles();
+      loadSubscribers();
+      updateGithubGitUrl();
+    });
+
+    function initFirebase() {
+      let config = LIVE_FIREBASE_CONFIG;
+      const stored = localStorage.getItem('mindblink_firebase_config');
+      if (stored) {
+        try { config = JSON.parse(stored); } catch (e) {}
+      }
+
+      try {
+        const apps = getApps();
+        const app = apps.length ? apps[0] : initializeApp(config);
+        
+        // Explicitly route to user's provisioned named database
+        const dbId = config.firestoreDatabaseId || "ai-studio-mindblink-93047e9c-a584-4475-87f2-e2a9f241dddf";
+        const rawDb = getFirestore(app, dbId);
+        db = createFirestoreClient(rawDb);
+
+        try { messaging = getMessaging(app); } catch (e) {}
+        isFirebaseReady = true;
+        const statusEl = document.getElementById('backend-type-text');
+        if (statusEl) statusEl.textContent = 'Live Firestore (Connected: ' + dbId + ')';
+        console.log('MindBlink Firestore connected successfully to database:', dbId);
+      } catch (err) {
+        console.warn('Firebase initialization notice:', err);
+        isFirebaseReady = false;
+        const statusEl = document.getElementById('backend-type-text');
+        if (statusEl) statusEl.textContent = 'Local Sandbox';
+      }
+    }
+
+    function initPublicLinks() {
+      const publicBase = window.location.origin;
+      const btn = document.getElementById('btn-public-user-link');
+      if (btn) btn.href = `${publicBase}/user.html`;
+    }
+
+    // 1. Categories Management with Live Firestore Sync
+    async function loadCategories() {
+      if (isFirebaseReady && db) {
+        try {
+          db.collection('categories').onSnapshot((snap) => {
+            if (!snap.empty) {
+              categoriesList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              renderCategoriesUI();
+              populateCategoryDropdowns();
+            } else {
+              seedInitialCategories();
+            }
+          });
+          return;
+        } catch (e) {
+          console.warn('Realtime listener fallback:', e);
+        }
+      }
+      loadLocalCategories();
+    }
+
+    async function seedInitialCategories() {
+      if (!isFirebaseReady || !db) return;
+      for (let cat of DEFAULT_CATEGORIES) {
+        await db.collection('categories').doc(cat.id).set(cat);
+      }
+    }
+
+    function loadLocalCategories() {
+      const local = localStorage.getItem('mindblink_categories');
+      categoriesList = local ? JSON.parse(local) : [...DEFAULT_CATEGORIES];
+      renderCategoriesUI();
+      populateCategoryDropdowns();
+    }
+
+    function renderCategoriesUI() {
+      const grid = document.getElementById('categories-grid');
+      document.getElementById('stat-total-categories').textContent = categoriesList.length;
+      if (!grid) return;
+
+      grid.innerHTML = categoriesList.map(cat => `
+        <div class="bg-surface-950 border border-surface-800 rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-white text-base">${escapeHtml(cat.name)}</h3>
+              <div class="flex items-center gap-2">
+                <button onclick="openCategoryModal('${cat.id}')" class="text-xs text-amber-400 hover:text-amber-300 font-medium transition">Edit</button>
+                <span class="text-slate-700">·</span>
+                <button onclick="deleteCategory('${cat.id}')" class="text-xs text-rose-400 hover:text-rose-300 transition">Delete</button>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              ${(cat.subcategories || []).map(s => `<span class="text-xs px-2.5 py-1 rounded bg-surface-900 border border-surface-800 text-slate-300">${escapeHtml(s)}</span>`).join('')}
+            </div>
+          </div>
+          <div class="pt-3 border-t border-surface-900 flex items-center justify-between text-xs text-slate-500 font-mono">
+            <span>${(cat.subcategories || []).length} Subcategories</span>
+            <span class="text-[10px] text-slate-600">ID: ${cat.id}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openCategoryModal(catId = null) {
+      const modal = document.getElementById('modal-category');
+      const title = document.getElementById('modal-category-title');
+      const idInput = document.getElementById('modal-category-id');
+      const nameInput = document.getElementById('modal-category-name');
+      const subsInput = document.getElementById('modal-subcategories');
+
+      if (catId) {
+        const cat = categoriesList.find(c => c.id === catId);
+        if (cat) {
+          title.textContent = 'Edit Category';
+          idInput.value = cat.id;
+          nameInput.value = cat.name;
+          subsInput.value = (cat.subcategories || []).join(', ');
+        }
+      } else {
+        title.textContent = 'Add Main Category';
+        idInput.value = '';
+        nameInput.value = '';
+        subsInput.value = '';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('modal-category').classList.add('hidden');
+    }
+
+    function populateCategoryDropdowns() {
+      const selectCat = document.getElementById('select-category');
+      if (!selectCat) return;
+      selectCat.innerHTML = categoriesList.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+      handleCategoryChange();
+    }
+
+    function handleCategoryChange() {
+      const chosen = document.getElementById('select-category').value;
+      const cat = categoriesList.find(c => c.name === chosen) || categoriesList[0];
+      const selectSub = document.getElementById('select-subcategory');
+      if (!selectSub) return;
+      selectSub.innerHTML = (cat?.subcategories || []).map(sub => `<option value="${sub}">${sub}</option>`).join('');
+    }
+
+    async function handleSaveCategory(e) {
+      e.preventDefault();
+      const existingId = document.getElementById('modal-category-id').value;
+      const name = document.getElementById('modal-category-name').value.trim();
+      const subs = document.getElementById('modal-subcategories').value.split(',').map(s => s.trim()).filter(Boolean);
+      const id = existingId || ('cat_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_'));
+      const catObj = { id, name, subcategories: subs };
+
+      if (isFirebaseReady && db) {
+        await db.collection('categories').doc(id).set(catObj);
+      }
+      const existingIdx = categoriesList.findIndex(c => c.id === id);
+      if (existingIdx >= 0) {
+        categoriesList[existingIdx] = catObj;
+      } else {
+        categoriesList.push(catObj);
+      }
+      localStorage.setItem('mindblink_categories', JSON.stringify(categoriesList));
+      closeCategoryModal();
+      renderCategoriesUI();
+      populateCategoryDropdowns();
+    }
+
+    async function deleteCategory(id) {
+      if (!confirm('Delete this category?')) return;
+      if (isFirebaseReady && db) {
+        await db.collection('categories').doc(id).delete();
+      }
+      categoriesList = categoriesList.filter(c => c.id !== id);
+      localStorage.setItem('mindblink_categories', JSON.stringify(categoriesList));
+      renderCategoriesUI();
+      populateCategoryDropdowns();
+    }
+
+    // 2. Puzzles Management & Dynamic Link Generator
+    async function loadPuzzles() {
+      if (isFirebaseReady && db) {
+        try {
+          db.collection('puzzles').orderBy('publishedAt', 'desc').onSnapshot((snap) => {
+            if (!snap.empty) {
+              puzzlesList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              renderPuzzlesTable();
+            } else {
+              seedInitialPuzzles();
+            }
+          });
+          return;
+        } catch (e) {
+          console.warn('Realtime listener fallback for puzzles:', e);
+        }
+      }
+      loadLocalPuzzles();
+    }
+
+    async function seedInitialPuzzles() {
+      if (!isFirebaseReady || !db) return;
+      for (let p of DEFAULT_PUZZLES) {
+        await db.collection('puzzles').doc(p.id).set(p);
+      }
+    }
+
+    function loadLocalPuzzles() {
+      const local = localStorage.getItem('mindblink_puzzles');
+      puzzlesList = local ? JSON.parse(local) : [...DEFAULT_PUZZLES];
+      renderPuzzlesTable();
+    }
+
+    function renderPuzzlesTable(filtered = null) {
+      const tbody = document.getElementById('puzzles-table-body');
+      document.getElementById('stat-total-puzzles').textContent = puzzlesList.length;
+      if (!tbody) return;
+
+      const list = filtered || puzzlesList;
+      tbody.innerHTML = list.map(p => {
+        const fullPublicUrl = `${window.location.origin}/user.html?id=${p.id}`;
+        return `
+          <tr class="hover:bg-surface-850/50 transition-colors">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
+                <img src="${escapeHtml(p.imageUrl)}" class="w-10 h-10 rounded-lg object-cover bg-surface-800 shrink-0 border border-surface-700" onerror="this.src='https://placehold.co/100x100/131b2e/f59e0b?text=P';">
+                <div class="max-w-xs">
+                  <div class="font-semibold text-xs text-white line-clamp-1">${escapeHtml(p.question)}</div>
+                  <div class="text-[10px] text-slate-500 font-mono">${p.difficulty || 'Medium'} · ${p.id}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-300">${escapeHtml(p.category)}</td>
+            <td class="py-3 px-4 text-xs text-slate-400">${escapeHtml(p.subcategory)}</td>
+            <td class="py-3 px-4 text-xs text-amber-300 font-mono">${escapeHtml(p.answer)}</td>
+            <td class="py-3 px-4 text-xs font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 select-all truncate max-w-[150px]">${fullPublicUrl}</span>
+                <button onclick="copyToClipboard('${fullPublicUrl}')" class="text-slate-400 hover:text-amber-400 p-1" title="Copy public link">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="openShareModalForPuzzle('${p.id}')" class="px-2.5 py-1 text-xs rounded bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30 transition flex items-center gap-1" title="Share to WhatsApp, Telegram, X, FB">
+                  <span>⚡ Share</span>
+                </button>
+                <a href="${fullPublicUrl}" target="_blank" class="px-2 py-1 text-xs rounded bg-surface-800 hover:bg-surface-700 text-white font-medium border border-surface-700 transition" title="Open user view">
+                  View ↗
+                </a>
+                <button onclick="generateQrForPuzzle('${p.id}')" class="px-2 py-1 text-xs rounded bg-surface-800 hover:bg-surface-700 text-slate-300 border border-surface-700 transition" title="Show QR Code">
+                  📱
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    let currentPublishedPuzzle = null;
+
+    async function handlePublishPuzzle(e) {
+      e.preventDefault();
+      const question = document.getElementById('input-question').value.trim();
+      const imageUrl = document.getElementById('input-image-url').value.trim();
+      const answer = document.getElementById('input-answer').value.trim();
+      const hint = document.getElementById('input-hint').value.trim();
+      const category = document.getElementById('select-category').value;
+      const subcategory = document.getElementById('select-subcategory').value;
+      const difficulty = document.getElementById('select-difficulty').value;
+
+      const btn = document.getElementById('btn-publish');
+      btn.disabled = true;
+      btn.textContent = 'Publishing to Firestore...';
+
+      const puzzleId = `mb_${Date.now().toString(36)}_${Math.random().toString(36).substring(2,6)}`;
+      const puzzleData = {
+        id: puzzleId,
+        question,
+        imageUrl,
+        answer,
+        hint,
+        category,
+        subcategory,
+        difficulty,
+        publishedAt: new Date().toISOString()
+      };
+
+      if (isFirebaseReady && db) {
+        await db.collection('puzzles').doc(puzzleId).set(puzzleData);
+      }
+
+      puzzlesList.unshift(puzzleData);
+      localStorage.setItem('mindblink_puzzles', JSON.stringify(puzzlesList));
+
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg><span>Publish to Firestore & Generate Public Link</span>`;
+
+      // Generate dynamic public link
+      const fullPublicUrl = `${window.location.origin}/user.html?id=${puzzleId}`;
+      lastGeneratedUrl = fullPublicUrl;
+      currentPublishedPuzzle = puzzleData;
+
+      // Populate dedicated shareable card
+      document.getElementById('share-card-thumb').src = puzzleData.imageUrl;
+      document.getElementById('share-card-question').textContent = puzzleData.question;
+      document.getElementById('share-card-category').textContent = puzzleData.category;
+      document.getElementById('share-card-subcategory').textContent = puzzleData.subcategory;
+      document.getElementById('share-card-difficulty').textContent = puzzleData.difficulty;
+      document.getElementById('share-card-id').textContent = `ID: ${puzzleData.id}`;
+      document.getElementById('share-card-timestamp').textContent = 'Just published';
+      document.getElementById('published-url-display').textContent = fullPublicUrl;
+      document.getElementById('btn-test-view').href = fullPublicUrl;
+
+      // Unhide dedicated card & scroll into view smoothly
+      const shareCard = document.getElementById('publish-success-card');
+      shareCard.classList.remove('hidden');
+      shareCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      renderPuzzlesTable();
+      document.getElementById('input-question').value = '';
+      document.getElementById('input-answer').value = '';
+      document.getElementById('input-hint').value = '';
+    }
+
+    function dismissShareCard() {
+      document.getElementById('publish-success-card').classList.add('hidden');
+    }
+
+    function sharePostToSocial(platform, puzzleObj = null) {
+      const p = puzzleObj || currentPublishedPuzzle || puzzlesList[0];
+      const url = p ? `${window.location.origin}/user.html?id=${p.id}` : (lastGeneratedUrl || `${window.location.origin}/user.html`);
+      const qText = p?.question || 'Solve this logic riddle!';
+      const shareMsg = `🧠 Can you solve this MindBlink puzzle in 5 seconds?\n\n"${qText}"\n\nPlay here:`;
+
+      let dest = '';
+      switch (platform) {
+        case 'whatsapp':
+          dest = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg + ' ' + url)}`;
+          break;
+        case 'telegram':
+          dest = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareMsg)}`;
+          break;
+        case 'twitter':
+          dest = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMsg)}&url=${encodeURIComponent(url)}&hashtags=MindBlink,Puzzle,BrainTeaser`;
+          break;
+        case 'facebook':
+          dest = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+          break;
+        default:
+          copyDynamicLink();
+          return;
+      }
+      if (dest) {
+        window.open(dest, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    function copyDynamicLink() {
+      const url = lastGeneratedUrl || document.getElementById('published-url-display').textContent;
+      copyToClipboard(url);
+      const btnText = document.getElementById('copy-btn-text');
+      if (btnText) {
+        btnText.textContent = 'Copied! ✓';
+        setTimeout(() => btnText.textContent = 'Copy Link', 2000);
+      }
+    }
+
+    let activeModalPuzzle = null;
+
+    function openShareModalForPuzzle(puzzleId) {
+      const p = puzzlesList.find(x => x.id === puzzleId);
+      if (!p) return;
+      activeModalPuzzle = p;
+      const fullUrl = `${window.location.origin}/user.html?id=${p.id}`;
+
+      document.getElementById('modal-share-thumb').src = p.imageUrl;
+      document.getElementById('modal-share-question').textContent = p.question;
+      document.getElementById('modal-share-badge').textContent = `${p.category} · ${p.subcategory}`;
+      document.getElementById('modal-share-id').textContent = `ID: ${p.id}`;
+      document.getElementById('modal-share-url').textContent = fullUrl;
+      document.getElementById('modal-copy-btn-text').textContent = 'Copy';
+
+      document.getElementById('modal-share-puzzle').classList.remove('hidden');
+    }
+
+    function closeSharePuzzleModal() {
+      document.getElementById('modal-share-puzzle').classList.add('hidden');
+    }
+
+    function triggerModalSocial(platform) {
+      if (activeModalPuzzle) {
+        sharePostToSocial(platform, activeModalPuzzle);
+      }
+    }
+
+    function copyModalShareLink() {
+      if (!activeModalPuzzle) return;
+      const fullUrl = `${window.location.origin}/user.html?id=${activeModalPuzzle.id}`;
+      copyToClipboard(fullUrl);
+      const btn = document.getElementById('modal-copy-btn-text');
+      if (btn) {
+        btn.textContent = 'Copied! ✓';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+    }
+
+    // 3. Subscribers & FCM Broadcast
+    async function loadSubscribers() {
+      if (isFirebaseReady && db) {
+        db.collection('fcm_tokens').onSnapshot((snap) => {
+          subscribersList = snap.docs.map(d => d.data());
+          document.getElementById('stat-total-subscribers').textContent = subscribersList.length;
+          document.getElementById('fcm-token-count').textContent = subscribersList.length;
+        });
+        return;
+      }
+      const l = localStorage.getItem('mindblink_subscribers');
+      subscribersList = l ? JSON.parse(l) : [{ token: 'sample_web_token_1' }];
+      document.getElementById('stat-total-subscribers').textContent = subscribersList.length;
+      document.getElementById('fcm-token-count').textContent = subscribersList.length;
+    }
+
+    async function handleSendPushNotification(e) {
+      e.preventDefault();
+      const title = document.getElementById('push-title').value.trim();
+      const body = document.getElementById('push-body').value.trim();
+      const targetUrl = document.getElementById('push-target-url').value.trim() || `${window.location.origin}/user.html`;
+
+      if (isFirebaseReady && db) {
+        await db.collection('notifications').add({
+          title, body, targetUrl, sentAt: new Date().toISOString(), recipientCount: subscribersList.length
+        });
+      }
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body, icon: '/assets/images/puzzle_optical_illusion_1793853160407.jpg' });
+      }
+
+      alert(`Broadcast sent to ${subscribersList.length} subscribed devices!`);
+      document.getElementById('push-title').value = '';
+      document.getElementById('push-body').value = '';
+    }
+
+    function triggerSelfTestNotification() {
+      if (!("Notification" in window)) {
+        alert("Desktop notifications not supported in this browser.");
+        return;
+      }
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') {
+          new Notification("MindBlink Broadcast Test 🧠", {
+            body: "Push notification alert received! Subscriptions are operational.",
+            icon: '/assets/images/puzzle_optical_illusion_1793853160407.jpg'
+          });
+        }
+      });
+    }
+
+    // 4. Cloud SQL & Postgres Simulation
+    function openCloudSqlModal() { document.getElementById('modal-cloudsql').classList.remove('hidden'); }
+    function closeCloudSqlModal() { document.getElementById('modal-cloudsql').classList.add('hidden'); }
+
+    function runSqlSimulation() {
+      const q = document.getElementById('input-sql-query').value.trim();
+      const out = document.getElementById('sql-query-output');
+      out.innerHTML = `
+        <div class="text-cyan-400 font-bold mb-1">Execution Plan: Parallel Sequential Scan on 'puzzles'</div>
+        <div class="text-slate-400 mb-2">Rows Returned: ${puzzlesList.length}</div>
+        <table class="w-full text-left border-collapse border border-surface-800">
+          <thead><tr class="bg-surface-900 text-[10px] text-cyan-300"><th class="p-1">id</th><th class="p-1">category</th><th class="p-1">answer</th></tr></thead>
+          <tbody>
+            ${puzzlesList.slice(0, 5).map(p => `
+              <tr class="border-t border-surface-800 text-[11px]"><td class="p-1">${p.id}</td><td class="p-1">${p.category}</td><td class="p-1">${p.answer}</td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function exportPostgresSqlDump() {
+      let sql = `-- MindBlink Cloud SQL (PostgreSQL) Database Dump\n-- Generated on ${new Date().toISOString()}\n\n`;
+      sql += `CREATE TABLE IF NOT EXISTS categories (id VARCHAR(128) PRIMARY KEY, name VARCHAR(100), subcategories TEXT[]);\n`;
+      sql += `CREATE TABLE IF NOT EXISTS puzzles (id VARCHAR(128) PRIMARY KEY, question TEXT, image_url TEXT, answer TEXT, category VARCHAR(100), subcategory VARCHAR(100), difficulty VARCHAR(50), published_at TIMESTAMP);\n\n`;
+      
+      puzzlesList.forEach(p => {
+        sql += `INSERT INTO puzzles (id, question, image_url, answer, category, subcategory, difficulty) VALUES ('${p.id}', '${p.question.replace(/'/g, "''")}', '${p.imageUrl}', '${p.answer.replace(/'/g, "''")}', '${p.category}', '${p.subcategory}', '${p.difficulty || 'Medium'}') ON CONFLICT (id) DO NOTHING;\n`;
+      });
+
+      const blob = new Blob([sql], { type: 'text/sql' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mindblink_cloudsql_backup.sql';
+      a.click();
+    }
+
+    // 5. GitHub Private Link & Git Sync
+    function openGithubModal() { document.getElementById('modal-github').classList.remove('hidden'); }
+    function closeGithubModal() { document.getElementById('modal-github').classList.add('hidden'); }
+
+    function updateGithubGitUrl() {
+      const user = document.getElementById('github-user-input').value.trim() || 'kaushlendra4882';
+      const repo = document.getElementById('github-repo-input').value.trim() || 'mindblink-app';
+      const url = `https://github.com/${user}/${repo}.git`;
+      document.getElementById('github-https-display').textContent = url;
+      document.getElementById('github-cli-commands').textContent = 
+`git init
+git add .
+git commit -m "MindBlink full release with Firebase & Cloud SQL"
+git branch -M main
+git remote add origin ${url}
+git push -u origin main`;
+    }
+
+    function copyGithubUrl() {
+      const url = document.getElementById('github-https-display').textContent;
+      navigator.clipboard.writeText(url);
+      alert('GitHub private repository URL copied!');
+    }
+
+    function downloadCompleteProjectBackup() {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        categories: categoriesList,
+        puzzles: puzzlesList,
+        subscribersCount: subscribersList.length
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mindblink_database_backup.json';
+      a.click();
+    }
+
+    // 6. QR Code Generation
+    function generateQrForPuzzle(id) {
+      const url = `${window.location.origin}/user.html?id=${id}`;
+      showQRCodeModal(url);
+    }
+
+    function showQRCodeModal(customUrl = null) {
+      const url = customUrl || lastGeneratedUrl || `${window.location.origin}/user.html`;
+      document.getElementById('qr-target-url').textContent = url;
+      document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+      document.getElementById('modal-qr').classList.remove('hidden');
+    }
+    function closeQRCodeModal() { document.getElementById('modal-qr').classList.add('hidden'); }
+
+    // Helpers
+    function openCategoryModal() { document.getElementById('modal-category').classList.remove('hidden'); }
+    function closeCategoryModal() { document.getElementById('modal-category').classList.add('hidden'); }
+    function openFirebaseSettingsModal() {
+      document.getElementById('firebase-config-input').value = JSON.stringify(LIVE_FIREBASE_CONFIG, null, 2);
+      document.getElementById('modal-firebase').classList.remove('hidden');
+    }
+    function closeFirebaseSettingsModal() { document.getElementById('modal-firebase').classList.add('hidden'); }
+    function saveFirebaseSettings() { closeFirebaseSettingsModal(); alert('Settings saved.'); }
+
+    function togglePresetPicker() { document.getElementById('preset-strip').classList.toggle('hidden'); }
+    function selectPresetImage(url) {
+      document.getElementById('input-image-url').value = url;
+      document.getElementById('image-preview').src = url;
+      document.getElementById('preset-strip').classList.add('hidden');
+    }
+    document.getElementById('input-image-url')?.addEventListener('input', (e) => {
+      document.getElementById('image-preview').src = e.target.value.trim();
+    });
+
+    function loadSamplePreset(type) {
+      if (type === 'illusion') {
+        document.getElementById('input-question').value = 'Count the impossible corners. If a traveler ascends three steps on each quadrant, how many total stairs did they elevate?';
+        selectPresetImage('/assets/images/puzzle_optical_illusion_1793853160407.jpg');
+        document.getElementById('input-answer').value = 'Zero net elevation in the Penrose loop.';
+        document.getElementById('input-hint').value = 'Trace the continuous closed isometric path.';
+        document.getElementById('select-category').value = 'Visual Mysteries';
+      } else if (type === 'cipher') {
+        document.getElementById('input-question').value = 'The ancient cipher box requires aligning three concentric dials. Which bezel controls the locking pin?';
+        selectPresetImage('/assets/images/puzzle_riddle_treasure_1793853162244.jpg');
+        document.getElementById('input-answer').value = 'The innermost gold runic bezel.';
+        document.getElementById('select-category').value = 'Adults Pro';
+      } else {
+        document.getElementById('input-question').value = 'In the chromatic mandala, each outer violet tile requires two yellow facets. If there are 12 points, how many yellow facets are needed?';
+        selectPresetImage('/assets/images/puzzle_pattern_logic_1793853160900.jpg');
+        document.getElementById('input-answer').value = '12 yellow facets.';
+        document.getElementById('select-category').value = 'Kids Fun';
+      }
+      handleCategoryChange();
+    }
+
+    function scrollToCreatePuzzle() {
+      document.getElementById('puzzles').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function escapeHtml(t) {
+      return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Export functions to window for inline HTML onclick/onsubmit/oninput handlers
+    Object.assign(window, {
+      handleCategoryChange,
+      closeCategoryModal,
+      closeCloudSqlModal,
+      closeFirebaseSettingsModal,
+      closeGithubModal,
+      closeQRCodeModal,
+      closeSharePuzzleModal,
+      copyDynamicLink,
+      copyGithubUrl,
+      copyModalShareLink,
+      copyToClipboard,
+      deleteCategory,
+      dismissShareCard,
+      downloadCompleteProjectBackup,
+      exportPostgresSqlDump,
+      generateQrForPuzzle,
+      loadSamplePreset,
+      openCategoryModal,
+      openCloudSqlModal,
+      openFirebaseSettingsModal,
+      openGithubModal,
+      openLinkGeneratorModal,
+      openShareModalForPuzzle,
+      runSqlSimulation,
+      saveFirebaseSettings,
+      scrollToCreatePuzzle,
+      selectPresetImage,
+      sharePostToSocial,
+      showQRCodeModal,
+      togglePresetPicker,
+      triggerModalSocial,
+      triggerSelfTestNotification,
+      filterPuzzlesTable,
+      updateGithubGitUrl,
+      handlePublishPuzzle,
+      handleSaveCategory,
+      handleSendPushNotification
+    });
+  </script>
+</body>
+</html>

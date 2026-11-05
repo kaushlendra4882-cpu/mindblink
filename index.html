@@ -3,21 +3,305 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MindBlink - Puzzle Publishing & Discovery Platform</title>
-    <meta name="description" content="MindBlink Puzzle Publishing & Discovery Platform with Admin Dashboard, Dynamic Links, Firestore, and Push Notifications" />
-    <meta property="og:title" content="MindBlink - Puzzle Publishing & Discovery Platform" />
-    <meta property="og:description" content="MindBlink Puzzle Publishing & Discovery Platform with Admin Dashboard, Dynamic Links, Firestore, and Push Notifications" />
+    <title>MindBlink - Puzzle Platform & Hub</title>
+    <meta name="description" content="MindBlink - 5-Sec IQ Traps, Visual Paradoxes, and Logic Puzzles with instant answer reveal and push notifications." />
+    <meta property="og:title" content="MindBlink - Puzzle Platform & Hub" />
+    <meta property="og:description" content="MindBlink - 5-Sec IQ Traps, Visual Paradoxes, and Logic Puzzles with instant answer reveal and push notifications." />
     <meta property="og:type" content="website" />
-    <link rel="icon" type="image/png" href="/assets/images/mindblink_logo.png" />
-    <meta property="og:image" content="/assets/images/mindblink_logo.png" />
-    <meta name="twitter:image" content="/assets/images/mindblink_logo.png" />
+    <meta property="og:image" content="assets/images/mindblink_logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="assets/images/mindblink_logo.png" />
+    <link rel="icon" type="image/png" href="assets/images/mindblink_logo.png" />
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN for Zero-Dependency Standalone GitHub Pages Support -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              surface: {
+                700: '#222f49',
+                800: '#172033',
+                850: '#111726',
+                900: '#0c101b',
+                950: '#06080e',
+              },
+              brand: {
+                400: '#38bdf8',
+                500: '#0284c7',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+      }
+      .ambient-glow {
+        animation: pulse-glow 6s ease-in-out infinite;
+      }
+      .progress-bar-fill {
+        transition: width 1s linear;
+      }
+    </style>
   </head>
-  <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-amber-500/20 selection:text-amber-300 antialiased font-sans">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300 relative overflow-x-hidden antialiased">
+
+    <!-- AMBIENT BACKGROUND GLOWS -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-cyan-500/10 rounded-full blur-[120px] ambient-glow"></div>
+      <div class="absolute bottom-0 right-10 w-[500px] h-[300px] bg-amber-500/10 rounded-full blur-[100px] ambient-glow"></div>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <div class="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 justify-between">
+
+      <!-- TOP BRAND BAR -->
+      <header class="flex items-center justify-between gap-4 pb-6 border-b border-surface-800/80">
+        <a href="index.html" class="flex items-center gap-3 group">
+          <img src="assets/images/mindblink_logo.png" alt="MindBlink Logo" onerror="this.src='/assets/images/mindblink_logo.png';" class="h-11 w-auto object-contain rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform" />
+        </a>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            GitHub Pages Ready
+          </span>
+        </div>
+      </header>
+
+      <!-- HERO SECTION & AUTO-REDIRECT BANNER -->
+      <main class="my-auto py-8 sm:py-12 space-y-8">
+
+        <!-- AUTO-REDIRECT NOTIFICATION CARD -->
+        <div id="redirect-banner" class="bg-gradient-to-r from-amber-500/15 via-surface-900 to-cyan-500/15 border border-amber-400/40 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span>Auto-Redirecting to User Website</span>
+              </div>
+              <h2 class="text-base sm:text-lg font-bold text-white">
+                Taking you to the puzzles in <span id="countdown-num" class="text-amber-400 font-mono text-xl font-extrabold">3</span> seconds...
+              </h2>
+              <p class="text-xs text-slate-300">
+                Any shared puzzle links (<code>?id=...</code>) are automatically preserved.
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+              <button onclick="cancelRedirect()" id="btn-cancel" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-surface-800 hover:bg-surface-700 text-slate-300 hover:text-white text-xs font-semibold border border-surface-700 transition">
+                Stay on Portal
+              </button>
+              <button onclick="goToUserSite()" class="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-surface-950 text-xs font-bold shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-1.5">
+                <span>Go Now</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-4 w-full h-1.5 bg-surface-950 rounded-full overflow-hidden border border-surface-800">
+            <div id="countdown-bar" class="h-full bg-gradient-to-r from-amber-400 to-cyan-400 progress-bar-fill w-0"></div>
+          </div>
+        </div>
+
+        <!-- PORTAL DESTINATIONS GRID -->
+        <div class="space-y-4">
+          <div class="text-center sm:text-left">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              MindBlink Launchpad
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">
+              Choose your destination below. Both pages are fully configured with Firebase Firestore, FCM Notifications, and dynamic sharing.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+
+            <!-- 1. USER PUBLIC PORTAL CARD -->
+            <a href="user.html" id="link-user-card" class="group bg-surface-900/90 hover:bg-surface-850 border border-surface-800 hover:border-amber-400/50 rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all hover:shadow-2xl hover:shadow-amber-500/10 space-y-6">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    🧩
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400/10 text-amber-300 border border-amber-400/20 font-mono">
+                    Public Player Site
+                  </span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-white group-hover:text-amber-400 transition-colors flex items-center gap-1.5">
+                    <span>User Website (user.html)</span>
+                    <span class="text-amber-400 transition-transform group-hover:translate-x-1">➔</span>
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                    Play daily riddles, optical illusions, and visual traps. Smooth answer reveal, category browsing, multi-platform sharing, and zero admin controls.
+                  </p>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-surface-800/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-mono">URL: ./user.html</span>
+                <span class="text-amber-400 font-bold group-hover:underline">Play Puzzles →</span>
+              </div>
+            </a>
+
+            <!-- 2. ADMIN DASHBOARD CARD -->
+            <a href="admin.html" id="link-admin-card" class="group bg-surface-900/90 hover:bg-surface-850 border border-surface-800 hover:border-cyan-400/50 rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all hover:shadow-2xl hover:shadow-cyan-500/10 space-y-6">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    ⚙️
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 font-mono">
+                    Management Panel
+                  </span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                    <span>Admin Dashboard (admin.html)</span>
+                    <span class="text-cyan-400 transition-transform group-hover:translate-x-1">➔</span>
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                    Publish puzzles to live Firestore, edit categories dynamically, generate shareable links & QR codes, and broadcast push notifications to subscribers.
+                  </p>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-surface-800/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-mono">URL: ./admin.html</span>
+                <span class="text-cyan-400 font-bold group-hover:underline">Open Admin Console →</span>
+              </div>
+            </a>
+
+          </div>
+        </div>
+
+        <!-- QUICK SYSTEM STATUS STRIP -->
+        <div class="bg-surface-900/60 border border-surface-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+          <div class="flex items-center gap-4 flex-wrap">
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>Firestore: <strong class="text-slate-200 font-mono">Connected</strong></span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              <span>FCM Push: <strong class="text-slate-200 font-mono">Active</strong></span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              <span>Cloud SQL DDL: <strong class="text-slate-200 font-mono">Ready</strong></span>
+            </span>
+          </div>
+          <div class="font-mono text-[11px] text-slate-500">
+            Version 2.0.0
+          </div>
+        </div>
+
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="pt-6 border-t border-surface-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          <img src="assets/images/mindblink_logo.png" alt="MindBlink" onerror="this.src='/assets/images/mindblink_logo.png';" class="h-4 w-auto object-contain" />
+          <span>MindBlink · 5-Sec IQ Traps & Logic Puzzles</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="user.html" class="text-slate-400 hover:text-amber-400 transition">User Site</a>
+          <span class="text-slate-700">·</span>
+          <a href="admin.html" class="text-slate-400 hover:text-cyan-400 transition">Admin Dashboard</a>
+        </div>
+      </footer>
+
+    </div>
+
+    <!-- SCRIPT: AUTO-REDIRECT & QUERY PARAM FORWARDING -->
+    <script>
+      (function() {
+        // Retrieve any existing query parameters (e.g. ?id=mb_illusion_01 or ?category=...)
+        const search = window.location.search || '';
+        
+        // Formulate target URLs preserving query parameters
+        const userUrl = 'user.html' + search;
+        const adminUrl = 'admin.html' + search;
+
+        // Update card links dynamically
+        const userCard = document.getElementById('link-user-card');
+        const adminCard = document.getElementById('link-admin-card');
+        if (userCard) userCard.href = userUrl;
+        if (adminCard) adminCard.href = adminUrl;
+
+        // Handle auto-redirect timer (3 seconds)
+        let seconds = 3;
+        let isCancelled = false;
+        let timer = null;
+
+        // If URL explicitly requests no redirect (e.g. ?stay=1 or ?portal=1)
+        if (search.includes('stay=1') || search.includes('portal=1')) {
+          cancelRedirect();
+          return;
+        }
+
+        function tick() {
+          if (isCancelled) return;
+          const numEl = document.getElementById('countdown-num');
+          const barEl = document.getElementById('countdown-bar');
+          
+          if (numEl) numEl.textContent = seconds;
+          if (barEl) {
+            const pct = Math.min(100, Math.round(((3 - seconds) / 3) * 100));
+            barEl.style.width = pct + '%';
+          }
+
+          if (seconds <= 0) {
+            window.location.href = userUrl;
+          } else {
+            seconds--;
+            timer = setTimeout(tick, 1000);
+          }
+        }
+
+        // Start countdown
+        tick();
+
+        // Exposed Controls
+        window.cancelRedirect = function() {
+          isCancelled = true;
+          if (timer) clearTimeout(timer);
+          const banner = document.getElementById('redirect-banner');
+          if (banner) {
+            banner.innerHTML = `
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2 text-slate-300">
+                  <span class="text-emerald-400 font-bold">✓ Auto-redirect paused.</span>
+                  <span>Explore the portal options below anytime.</span>
+                </div>
+                <button onclick="goToUserSite()" class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-surface-950 font-bold text-xs transition">
+                  Proceed to User Site ➔
+                </button>
+              </div>
+            `;
+          }
+        };
+
+        window.goToUserSite = function() {
+          window.location.href = userUrl;
+        };
+      })();
+    </script>
   </body>
 </html>
-

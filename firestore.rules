@@ -20,7 +20,8 @@ service cloud.firestore {
     // Anyone can read puzzles (public riddles for user website)
     // Create/update/delete restricted to admin or valid schema
     match /puzzles/{puzzleId} {
-      allow get, list: if isValidId(puzzleId);
+      allow get: if isValidId(puzzleId);
+      allow list: if true;
       
       allow create: if isValidId(puzzleId)
         && incoming().keys().hasAll(['id', 'question', 'imageUrl', 'answer', 'category', 'subcategory'])
@@ -39,7 +40,8 @@ service cloud.firestore {
     // 2. Categories Collection
     // Anyone can read categories for browsing
     match /categories/{categoryId} {
-      allow get, list: if isValidId(categoryId);
+      allow get: if isValidId(categoryId);
+      allow list: if true;
       
       allow create, update: if isValidId(categoryId)
         && incoming().keys().hasAll(['id', 'name', 'subcategories'])
